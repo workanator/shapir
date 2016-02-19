@@ -3,6 +3,9 @@ use std::fmt;
 use std::ops::Deref;
 
 
+pub type Result<T> = std::result::Result<T, Error>;
+
+
 /// Error type
 #[derive(Debug)]
 pub struct Error {
@@ -33,7 +36,7 @@ impl Error {
 	}
 
 	/// Consumes self and retuns `Err` variant of `Result<T, Error>`.
-	pub fn result<T>(self) -> Result<T, Self> {
+	pub fn result<T>(self) -> Result<T> {
 		Err(self)
 	}
 }
