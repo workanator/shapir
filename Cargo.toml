@@ -3,9 +3,6 @@ name = "shapir"
 version = "0.1.0"
 authors = ["workanator <workanator@gmail.com>"]
 
-[[bin]]
-name = "main"
-
 [dependencies]
 serde_json = "*"
 hyper = "*"
