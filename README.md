@@ -3,7 +3,7 @@ Unofficial [ShareFile REST API](http://api.sharefile.com/rest/) SDK for [Rust](h
 
 ## Example
 
-```
+```rust
 use shapir::Connection;
 
 let conn = Connection::new()
