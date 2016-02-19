@@ -130,7 +130,7 @@ impl Connection {
 
 		// Parse response into JSON Value and then into AuthData
 		let mut json = String::new();
-    	response.read_to_string(&mut json).unwrap();
+		response.read_to_string(&mut json).unwrap();
 		match AuthData::parse_value(serde_json::from_str(&json).unwrap()) {
 			Ok(data) => {
 				self.access_token = Some(data);
