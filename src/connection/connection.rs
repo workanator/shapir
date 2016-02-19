@@ -79,6 +79,8 @@ impl Connection {
 	}
 
 	pub fn connect(mut self) -> Result<Connection> {
+		use url::form_urlencoded;
+
 		// Prepare authentication request body and URL
 		let subdomain = match &self.settings.subdomain {
 			&Some(ref v) => v.clone(),
@@ -105,11 +107,14 @@ impl Connection {
 			&None => return Error::new("Client Secret is required").result()
 		};
 
-		let body = format!("grant_type=password&client_id={}&client_secret={}&username={}&password={}",
-			client_id,
-			client_secret,
-			username,
-			password);
+		let mut form_data: Vec<(&str, String)> = Vec::new();
+		form_data.push(("grant_type", "password".to_string()));
+		form_data.push(("client_id", client_id));
+		form_data.push(("client_secret", client_secret));
+		form_data.push(("username", username));
+		form_data.push(("password", password));
+
+		let body = form_urlencoded:: serialize(form_data);
 
 		let url = match super::url::to_url(format!("https://{}.sharefile.com/oauth/token", subdomain)) {
 			Ok(v) => v,
