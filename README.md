@@ -12,5 +12,6 @@ let conn = Connection::new()
 	.password("your-password")
 	.client_id("client-id")
 	.client_secret("client-secret")
-	.connect();
+	.connect()
+	.unwrap();
 ```
