@@ -114,7 +114,7 @@ impl Connection {
 		form_data.push(("username", username));
 		form_data.push(("password", password));
 
-		let body = form_urlencoded:: serialize(form_data);
+		let body = form_urlencoded::serialize(form_data);
 
 		let url = match super::url::to_url(format!("https://{}.sharefile.com/oauth/token", subdomain)) {
 			Ok(v) => v,

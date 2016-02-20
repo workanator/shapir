@@ -21,7 +21,7 @@ impl QueryOptions {
 		}
 	}
 
-	pub fn select<T>(mut self, opt: Option<Vec<T>>) -> Self where T: Into<String> {
+	pub fn select<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
 		match opt {
 			Some(items) => {
 				let items = items.into_iter()
@@ -37,7 +37,7 @@ impl QueryOptions {
 		self
 	}
 
-	pub fn expand<T>(mut self, opt: Option<Vec<T>>) -> Self where T: Into<String> {
+	pub fn expand<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
 		match opt {
 			Some(items) => {
 				let items = items.into_iter()
@@ -53,7 +53,7 @@ impl QueryOptions {
 		self
 	}
 
-	pub fn filter<T>(mut self, opt: Option<Vec<T>>) -> Self where T: Into<String> {
+	pub fn filter<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
 		match opt {
 			Some(items) => {
 				let items = items.into_iter()
@@ -69,7 +69,7 @@ impl QueryOptions {
 		self
 	}
 
-	pub fn order_by<T>(mut self, opt: Option<Vec<T>>) -> Self where T: Into<String> {
+	pub fn order_by<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
 		match opt {
 			Some(items) => {
 				let items = items.into_iter()
@@ -109,5 +109,42 @@ impl QueryOptions {
 		};
 
 		self
+	}
+}
+
+
+impl Into<String> for QueryOptions {
+	fn into(self) -> String {
+		use url::form_urlencoded;
+
+		// Fill in options
+		let mut options: Vec<(&str, String)> = Vec::new();
+
+		if let Some(items) = self.select {
+			options.push(("$select", items.into_boxed_slice().join(",")));
+		};
+
+		if let Some(items) = self.expand {
+			options.push(("$expand", items.into_boxed_slice().join(",")));
+		};
+
+		if let Some(items) = self.filter {
+			options.push(("$filter", items.into_boxed_slice().join(",")));
+		};
+
+		if let Some(items) = self.order_by {
+			options.push(("$orderBy", items.into_boxed_slice().join(",")));
+		};
+
+		if let Some(num) = self.top {
+			options.push(("$top", num.to_string()));
+		};
+
+		if let Some(num) = self.skip {
+			options.push(("$skip", num.to_string()));
+		};
+
+		// Convert OData options into URL query
+		form_urlencoded::serialize(options)
 	}
 }
