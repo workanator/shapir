@@ -1,6 +1,6 @@
 /// OData query options/parameters
 ///
-/// # Example
+/// ## Example
 ///
 /// ```rust
 /// use shapir::odata::QueryOptions;

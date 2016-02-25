@@ -141,4 +141,8 @@ impl Connection {
 			}
 		}
 	}
+
+	pub fn items(&self) -> ::api::Items {
+		::api::Items::new(self.clone())
+	}
 }

@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/workanator/shapir.svg?branch=master)](https://travis-ci.org/workanator/shapir)  
-
-# shapir
+# shapir [![Build Status](https://travis-ci.org/workanator/shapir.svg?branch=master)](https://travis-ci.org/workanator/shapir)  
 Unofficial [ShareFile REST API](http://api.sharefile.com/rest/) SDK for [Rust](https://www.rust-lang.org/).
 
 ## Example
