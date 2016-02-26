@@ -1,9 +1,4 @@
-mod items;
-
-
-pub use self::items::Items;
-pub use self::items::Path;
-pub use self::items::Action;
+pub mod items;
 
 
 /// The option which can hold no, one, or many values of some type.

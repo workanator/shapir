@@ -7,3 +7,4 @@ authors = ["workanator <workanator@gmail.com>"]
 serde_json = "*"
 hyper = "*"
 url = "*"
+chrono = "*"

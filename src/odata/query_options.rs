@@ -179,6 +179,13 @@ impl Into<String> for QueryOptions {
 }
 
 
+impl ToString for QueryOptions {
+	fn to_string(&self) -> String {
+		self.clone().into()
+	}
+}
+
+
 #[cfg(test)]
 mod tests {
 	use super::QueryOptions;

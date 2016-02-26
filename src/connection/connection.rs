@@ -2,10 +2,9 @@ use std::io::Read;
 use std::sync::Arc;
 use hyper::client::{Client, Body};
 use hyper::method::Method;
-use hyper::header::ContentType;
+use hyper::header::{Headers, ContentType, Authorization, Bearer};
 use hyper::mime::{Mime, TopLevel, SubLevel};
-use serde_json;
-use serde_json::Value;
+use serde_json::{self, Value};
 use ::{Result, Error};
 use super::{ConnectionSettings, ConnectionBuilder};
 
@@ -61,7 +60,8 @@ impl AuthData {
 pub struct Connection {
 	client: Arc<Client>,
 	settings: ConnectionSettings,
-	access_token: Option<AuthData>,
+	auth: Option<AuthData>,
+	endpoint: String,
 }
 
 
@@ -74,7 +74,8 @@ impl Connection {
 		Connection {
 			client: Arc::new(Client::new()),
 			settings: settings,
-			access_token: None,
+			auth: None,
+			endpoint: "".to_string(),
 		}
 	}
 
@@ -122,18 +123,23 @@ impl Connection {
 		};
 
 		// Try to authenticate on ShareFile
-		let mut response = self.client.request(Method::Post, url)
+		let response = self.client.request(Method::Post, url)
 			.header(ContentType(Mime(TopLevel::Application, SubLevel::WwwFormUrlEncoded, vec![])))
 			.body(Body::BufBody(body.as_bytes(), body.len()))
-			.send()
-			.unwrap();
+			.send();
+
+		let mut response = match response {
+			Ok(response) => response,
+			Err(err) => return Error::new("Authentication failed").because(err).result()
+		};
 
 		// Parse response into JSON Value and then into AuthData
 		let mut json = String::new();
 		response.read_to_string(&mut json).unwrap();
 		match AuthData::parse_value(serde_json::from_str(&json).unwrap()) {
 			Ok(data) => {
-				self.access_token = Some(data);
+				self.endpoint = format!("https://{}.sf-api.com/sf/v3/", data.subdomain);
+				self.auth = Some(data);
 				Ok(self)
 			},
 			Err(err) => {
@@ -142,7 +148,50 @@ impl Connection {
 		}
 	}
 
-	pub fn items(&self) -> ::api::Items {
-		::api::Items::new(self.clone())
+	pub fn query(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<String> {
+		if let Some(ref auth) = self.auth {
+			// Parse URL string into the internal representation
+			let url = match super::url::to_url(format!("{}{}", self.endpoint, uri)) {
+				Ok(v) => v,
+				Err(err) => return Error::new("Invalid request URL").because(err).result()
+			};
+
+			// Unwrap body so it live long enough
+			let body = match body {
+				Some(data) => data,
+				None => "".to_string()
+			};
+
+			// Build request
+			let mut request = self.client.request(method, url);
+
+			if let Some(headers) = headers {
+				request = request.headers(headers);
+			}
+
+			request = request.header(Authorization(Bearer { token: auth.access_token.to_owned() }));
+
+			if body.len() > 0 {
+				request = request.body(Body::BufBody(body.as_bytes(), body.len()));
+			}
+
+			// .. send and unwrap to string
+			let mut response = match request.send() {
+				Ok(response) => response,
+				Err(err) => return Error::new("Request failed").because(err).result()
+			};
+
+			let mut data = String::new();
+			response.read_to_string(&mut data).unwrap();
+
+			Ok(data)
+		}
+		else {
+			Error::new("Not authenticated").result()
+		}
+	}
+
+	pub fn items(&self) -> ::api::items::Items {
+		::api::items::Items::new(self.clone())
 	}
 }
