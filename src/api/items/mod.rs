@@ -32,6 +32,8 @@ pub enum Path {
 	Absolute(String),
 	/// The relative path
 	Relative(String, String),
+	/// Parent
+	Parent(String),
 }
 
 
@@ -57,6 +59,7 @@ impl Path {
 			&Path::Id(ref id) => format!("Items({}){}?{}", id, part, options),
 			&Path::Absolute(ref path) => format!("Items/ByPath?path={}&{}", path, options),
 			&Path::Relative(ref id, ref path) => format!("Items({})/ByPath?path={}&{}", id, path, options),
+			&Path::Parent(ref id) => format!("Items({})/Parent&{}", id, options),
 		}
 	}
 }
