@@ -24,18 +24,18 @@ pub struct Item {
 	pub description: String,
 	pub size: u64,
 	pub creation_date: DateTime<UTC>,
-	pub meta: Value,
+	pub meta: Option<Value>,
 }
 
 
 impl Item {
-	pub fn from_value(value: Value) -> Result<MultiOption<Item>> {
+	pub fn from_value(value: Value, with_meta: bool) -> Result<MultiOption<Item>> {
 		// Check if we have one item or many
-		match value.lookup("odata.count") {
+		match value.find("odata.count") {
 			Some(_) => {
 				let mut items = Vec::new();
 				for val in value.find("value").unwrap().as_array().unwrap() {
-					match Item::item_from_value(val) {
+					match Item::item_from_value(val, with_meta) {
 						Ok(item) => items.push(item),
 						Err(err) => return err.result()
 					};
@@ -44,7 +44,7 @@ impl Item {
 				Ok(MultiOption::Many(items))
 			},
 			None => {
-				match Item::item_from_value(&value) {
+				match Item::item_from_value(&value, with_meta) {
 					Ok(item) => Ok(MultiOption::One(item)),
 					Err(err) => return err.result()
 				}
@@ -52,7 +52,7 @@ impl Item {
 		}
 	}
 
-	fn item_from_value(value: &Value) -> Result<Item> {
+	fn item_from_value(value: &Value, with_meta: bool) -> Result<Item> {
 		let kind = match value.find("odata.type") {
 			Some(otype) => match otype.as_string().unwrap() {
 				"ShareFile.Api.Models.Folder" => Kind::Folder,
@@ -60,7 +60,6 @@ impl Item {
 				k => return Error::new(format!("Unknown item kind {}.", k)).result()
 			},
 			None => {
-				println!("{:?}", value);
 				return Error::new("Item.odata.type property is missing.").result();
 			}
 		};
@@ -98,6 +97,13 @@ impl Item {
 			None => return Error::new("Item.CreationDate property is missing.").result()
 		};
 
+		let meta = if with_meta {
+			Some(value.clone())
+		}
+		else {
+			None
+		};
+
 		Ok(Item {
 			kind: kind,
 			id: id.to_owned(),
@@ -106,7 +112,7 @@ impl Item {
 			description: description.to_owned(),
 			size: size,
 			creation_date: creation_date,
-			meta: value.clone(),
+			meta: meta,
 		})
 	}
 }

@@ -5,7 +5,7 @@ use serde_json;
 use ::connection::Connection;
 use ::odata::QueryOptions;
 use ::api::MultiOption;
-use ::{Result, Error};
+use ::Result;
 
 
 pub use self::item::{Item, Kind};
@@ -30,39 +30,33 @@ pub enum Path {
 	Id(String),
 	/// The absolute path
 	Absolute(String),
+	/// The relative path
+	Relative(String, String),
 }
 
 
 impl Path {
-	fn uri(&self, action: &Action) -> String {
+	fn uri(&self, part: Option<&str>, options: Option<QueryOptions>) -> String {
+		let part = match part {
+			Some(part) => part,
+			None => ""
+		};
+
+		let options: String = match options {
+			Some(opts) => opts.to_string(),
+			None => "".to_owned()
+		};
+
 		match self {
-			&Path::Home => format!("Items(home){}?", action.to_string()),
-			&Path::Favorites => format!("Items(favorites){}?", action.to_string()),
-			&Path::AllShared => format!("Items(allshared){}?", action.to_string()),
-			&Path::Connectors => format!("Items(connectors){}?", action.to_string()),
-			&Path::Box => format!("Items(box){}?", action.to_string()),
-			&Path::Top => format!("Items(top){}?", action.to_string()),
-			&Path::Id(ref id) => format!("Items({}){}?", id, action.to_string()),
-			&Path::Absolute(ref path) => format!("Items{}/ByPath?path={}&", action.to_string(), path),
-		}
-	}
-}
-
-
-/// Item action
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Action {
-	/// Get item stats
-	Stat,
-	/// List children items
-	List,
-}
-
-impl ToString for Action {
-	fn to_string(&self) -> String {
-		match self {
-			&Action::Stat => "".to_owned(),
-			&Action::List => "/Children".to_owned(),
+			&Path::Home => format!("Items(home){}?{}", part, options),
+			&Path::Favorites => format!("Items(favorites){}?{}", part, options),
+			&Path::AllShared => format!("Items(allshared){}?{}", part, options),
+			&Path::Connectors => format!("Items(connectors){}?{}", part, options),
+			&Path::Box => format!("Items(box){}?{}", part, options),
+			&Path::Top => format!("Items(top){}?{}", part, options),
+			&Path::Id(ref id) => format!("Items({}){}?{}", id, part, options),
+			&Path::Absolute(ref path) => format!("Items/ByPath?path={}&{}", path, options),
+			&Path::Relative(ref id, ref path) => format!("Items({})/ByPath?path={}&{}", id, path, options),
 		}
 	}
 }
@@ -71,9 +65,7 @@ impl ToString for Action {
 /// Items Entities
 pub struct Items {
 	conn: Connection,
-	path: Option<Path>,
-	action: Option<Action>,
-	options: Option<QueryOptions>,
+	meta: bool,
 }
 
 
@@ -81,58 +73,31 @@ impl Items {
 	pub fn new(conn: Connection) -> Self {
 		Items {
 			conn: conn,
-			path: None,
-			action: None,
-			options: None,
+			meta: false,
 		}
 	}
 
-	pub fn reset(&mut self) -> &mut Self {
-		self.path = None;
-		self.action = None;
-		self.options = None;
-		self
+	pub fn include_meta(&mut self, include: bool) {
+		self.meta = include;
 	}
 
-	pub fn path(&mut self, path: Path) -> &mut Self {
-		self.path = Some(path);
-		self
+	pub fn stat(&self, path: Path, options: Option<QueryOptions>) -> Result<MultiOption<Item>> {
+		self.query(path.uri(None, options))
 	}
 
-	pub fn action(&mut self, action: Action) -> &mut Self {
-		self.action = Some(action);
-		self
+	pub fn list(&self, path: Path, options: Option<QueryOptions>) -> Result<MultiOption<Item>> {
+		match self.stat(path, None) {
+			Ok(MultiOption::One(item)) => {
+				self.query(Path::Id(item.id).uri(Some("/Children"), options))
+			},
+			Ok(other) => Ok(other),
+			Err(err) => err.result()
+		}
 	}
 
-	pub fn options(&mut self, options: QueryOptions) -> &mut Self {
-		self.options = Some(options);
-		self
-	}
-
-	pub fn query(&mut self) -> Result<MultiOption<Item>> {
-		// Build URI
-		let uri = {
-			let path = match self.path {
-				Some(ref path) => path,
-				None => return Error::new("Path is required").result()
-			};
-
-			let action = match self.action {
-				Some(ref action) => action,
-				None => return Error::new("Action is required").result()
-			};
-
-			match self.options {
-				Some(ref options) => format!("{}{}", path.uri(action), options.to_string()),
-				None => path.uri(action)
-			}
-		};
-
-		// Reset the state so the API can be reused
-		self.reset();
-
+	fn query(&self, uri: String) -> Result<MultiOption<Item>> {
 		match self.conn.query(Method::Get, uri, None, None) {
-			Ok(json) => Item::from_value(serde_json::from_str(&json).unwrap()),
+			Ok(json) => Item::from_value(serde_json::from_str(&json).unwrap(), self.meta),
 			Err(err) => err.result()
 		}
 	}
