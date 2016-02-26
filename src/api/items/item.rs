@@ -21,6 +21,7 @@ pub struct Item {
 	pub id: String,
 	pub url: String,
 	pub name: String,
+	pub filename: String,
 	pub description: String,
 	pub size: u64,
 	pub creation_date: DateTime<UTC>,
@@ -79,6 +80,11 @@ impl Item {
 			None => return Error::new("Item.Name property is missing.").result()
 		};
 
+		let filename = match value.find("FileName") {
+			Some(v) => v.as_string().unwrap(),
+			None => return Error::new("Item.FileName property is missing.").result()
+		};
+
 		let description = match value.find("Description") {
 			Some(v) => v.as_string().unwrap(),
 			None => return Error::new("Item.Description property is missing.").result()
@@ -109,6 +115,7 @@ impl Item {
 			id: id.to_owned(),
 			url: url.to_owned(),
 			name: name.to_owned(),
+			filename: filename.to_owned(),
 			description: description.to_owned(),
 			size: size,
 			creation_date: creation_date,
