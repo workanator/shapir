@@ -3,7 +3,7 @@ mod item;
 use hyper::method::Method;
 use serde_json;
 use ::connection::Connection;
-use ::odata::QueryOptions;
+use ::odata::Parameters;
 use ::api::MultiOption;
 use ::Result;
 
@@ -38,28 +38,28 @@ pub enum Path {
 
 
 impl Path {
-	fn uri(&self, part: Option<&str>, options: Option<QueryOptions>) -> String {
+	fn uri(&self, part: Option<&str>, parameters: Option<Parameters>) -> String {
 		let part = match part {
 			Some(part) => part,
 			None => ""
 		};
 
-		let options: String = match options {
+		let parameters: String = match parameters {
 			Some(opts) => opts.to_string(),
 			None => "".to_owned()
 		};
 
 		match self {
-			&Path::Home => format!("Items(home){}?{}", part, options),
-			&Path::Favorites => format!("Items(favorites){}?{}", part, options),
-			&Path::AllShared => format!("Items(allshared){}?{}", part, options),
-			&Path::Connectors => format!("Items(connectors){}?{}", part, options),
-			&Path::Box => format!("Items(box){}?{}", part, options),
-			&Path::Top => format!("Items(top){}?{}", part, options),
-			&Path::Id(ref id) => format!("Items({}){}?{}", id, part, options),
-			&Path::Absolute(ref path) => format!("Items/ByPath?path={}&{}", path, options),
-			&Path::Relative(ref id, ref path) => format!("Items({})/ByPath?path={}&{}", id, path, options),
-			&Path::Parent(ref id) => format!("Items({})/Parent&{}", id, options),
+			&Path::Home => format!("Items(home){}?{}", part, parameters),
+			&Path::Favorites => format!("Items(favorites){}?{}", part, parameters),
+			&Path::AllShared => format!("Items(allshared){}?{}", part, parameters),
+			&Path::Connectors => format!("Items(connectors){}?{}", part, parameters),
+			&Path::Box => format!("Items(box){}?{}", part, parameters),
+			&Path::Top => format!("Items(top){}?{}", part, parameters),
+			&Path::Id(ref id) => format!("Items({}){}?{}", id, part, parameters),
+			&Path::Absolute(ref path) => format!("Items/ByPath?path={}&{}", path, parameters),
+			&Path::Relative(ref id, ref path) => format!("Items({})/ByPath?path={}&{}", id, path, parameters),
+			&Path::Parent(ref id) => format!("Items({})/Parent&{}", id, parameters),
 		}
 	}
 }
@@ -84,14 +84,14 @@ impl Items {
 		self.meta = include;
 	}
 
-	pub fn stat(&self, path: Path, options: Option<QueryOptions>) -> Result<MultiOption<Item>> {
-		self.query(path.uri(None, options))
+	pub fn stat(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
+		self.query(path.uri(None, parameters))
 	}
 
-	pub fn list(&self, path: Path, options: Option<QueryOptions>) -> Result<MultiOption<Item>> {
+	pub fn list(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
 		match self.stat(path, None) {
 			Ok(MultiOption::One(item)) => {
-				self.query(Path::Id(item.id).uri(Some("/Children"), options))
+				self.query(Path::Id(item.id).uri(Some("/Children"), parameters))
 			},
 			Ok(other) => Ok(other),
 			Err(err) => err.result()

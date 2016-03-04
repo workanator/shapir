@@ -1,11 +1,11 @@
-/// OData query options/parameters
+/// OData query parameters
 ///
 /// ## Example
 ///
 /// ```rust
-/// use shapir::odata::QueryOptions;
+/// use shapir::odata::Parameters;
 ///
-///	let opts = QueryOptions::new()
+///	let opts = Parameters::new()
 ///		.select(Some(vec!["Field1", "Field2", "3"]))
 ///		.expand(Some(vec!["Children", "Siblings"]))
 ///		.filter(Some(vec!["A eq B", "true"]))
@@ -16,7 +16,7 @@
 ///
 
 #[derive(Debug, Clone, Default)]
-pub struct QueryOptions {
+pub struct Parameters {
 	select: Option<Vec<String>>,
 	expand: Option<Vec<String>>,
 	filter: Option<Vec<String>>,
@@ -25,10 +25,10 @@ pub struct QueryOptions {
 	skip: Option<u32>,
 }
 
-impl QueryOptions {
-	/// Create a new instance of `QueryOptions` with no options specified.
+impl Parameters {
+	/// Create a new instance of `Parameters` with no options specified.
 	pub fn new() -> Self {
-		QueryOptions {
+		Parameters {
 			select: None,
 			expand: None,
 			filter: None,
@@ -142,7 +142,7 @@ impl QueryOptions {
 }
 
 
-impl Into<String> for QueryOptions {
+impl Into<String> for Parameters {
 	fn into(self) -> String {
 		use url::form_urlencoded;
 
@@ -179,7 +179,7 @@ impl Into<String> for QueryOptions {
 }
 
 
-impl ToString for QueryOptions {
+impl ToString for Parameters {
 	fn to_string(&self) -> String {
 		self.clone().into()
 	}
@@ -188,7 +188,7 @@ impl ToString for QueryOptions {
 
 #[cfg(test)]
 mod tests {
-	use super::QueryOptions;
+	use super::Parameters;
 
 	fn encode_pairs(v: Vec<(&str, &str)>) -> String {
 		use url::form_urlencoded;
@@ -197,14 +197,14 @@ mod tests {
 
 	#[test]
 	fn query_options_none() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.into();
 		assert_eq!(opts, "".to_string());
 	}
 
 	#[test]
 	fn query_options_select() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.select(Some(vec!["Field1", "Field2", "3"]))
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$select", "Field1,Field2,3")]));
@@ -212,7 +212,7 @@ mod tests {
 
 	#[test]
 	fn query_options_expand() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.expand(Some(vec!["Children", "Siblings"]))
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$expand", "Children,Siblings")]));
@@ -220,7 +220,7 @@ mod tests {
 
 	#[test]
 	fn query_options_filter() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.filter(Some(vec!["A eq B", "true"]))
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$filter", "A eq B and true")]));
@@ -228,7 +228,7 @@ mod tests {
 
 	#[test]
 	fn query_options_order_by() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.order_by(Some(vec!["Date asc", "Time desc", "Id"]))
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$orderBy", "Date asc,Time desc,Id")]));
@@ -236,7 +236,7 @@ mod tests {
 
 	#[test]
 	fn query_options_top() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.top(Some(10u32))
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$top", "10")]));
@@ -244,7 +244,7 @@ mod tests {
 
 	#[test]
 	fn query_options_skip() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.skip(Some(9u32))
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$skip", "9")]));
@@ -252,7 +252,7 @@ mod tests {
 
 	#[test]
 	fn query_options_all() {
-		let opts: String = QueryOptions::new()
+		let opts: String = Parameters::new()
 			.select(Some(vec!["Field1", "Field2", "3"]))
 			.expand(Some(vec!["Children", "Siblings"]))
 			.filter(Some(vec!["A eq B", "true"]))

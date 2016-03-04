@@ -1,3 +1,3 @@
-mod query_options;
+mod parameters;
 
-pub use self::query_options::QueryOptions;
+pub use self::parameters::Parameters;
