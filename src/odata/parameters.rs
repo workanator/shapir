@@ -6,17 +6,18 @@
 /// use shapir::odata::Parameters;
 ///
 ///	let opts = Parameters::new()
-///		.select(Some(vec!["Field1", "Field2", "3"]))
-///		.expand(Some(vec!["Children", "Siblings"]))
-///		.filter(Some(vec!["A eq B", "true"]))
-///		.order_by(Some(vec!["Date asc", "Time desc", "Id"]))
-///		.top(Some(10u32))
-///		.skip(Some(9u32));
+///		.select(vec!["Field1", "Field2", "3"])
+///		.expand(vec!["Children", "Siblings"])
+///		.filter(vec!["A eq B", "true"])
+///		.order_by(vec!["Date asc", "Time desc", "Id"])
+///		.top(10u32)
+///		.skip(9u32);
 /// ```
 ///
 
 #[derive(Debug, Clone, Default)]
 pub struct Parameters {
+	custom: Option<Vec<(&'static str, String)>>,
 	select: Option<Vec<String>>,
 	expand: Option<Vec<String>>,
 	filter: Option<Vec<String>>,
@@ -29,6 +30,7 @@ impl Parameters {
 	/// Create a new instance of `Parameters` with no options specified.
 	pub fn new() -> Self {
 		Parameters {
+			custom: None,
 			select: None,
 			expand: None,
 			filter: None,
@@ -38,105 +40,80 @@ impl Parameters {
 		}
 	}
 
-	/// Set `$select` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theselectsystemqueryoption)
-	/// for more details.
-	pub fn select<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
-		match opt {
-			Some(items) => {
-				let items = items.into_iter()
-					.map(|v| v.into())
-					.collect();
-				self.select = Some(items);
+	/// Set custom parameters
+	pub fn custom<V>(mut self, opt: Vec<(&'static str, V)>) -> Self where V: Into<String> {
+		let items = opt.into_iter()
+			.map(|v| (v.0, v.1.into()))
+			.collect();
+		self.custom = Some(items);
+		self
+	}
+
+	/// Add custom parameters
+	pub fn custom_add<V>(mut self, param: (&'static str, V)) -> Self where V: Into<String> {
+		match self.custom {
+			Some(ref mut items) => {
+				items.push((param.0, param.1.into()));
 			},
 			None => {
-				self.select = None;
-			},
+				self.custom = Some(vec![(param.0, param.1.into())]);
+			}
 		};
 
+		self
+	}
+
+	/// Set `$select` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theselectsystemqueryoption)
+	/// for more details.
+	pub fn select<T>(mut self, opt: T) -> Self where T: IntoIterator, T::Item: Into<String> {
+		let items = opt.into_iter()
+			.map(|v| v.into())
+			.collect();
+		self.select = Some(items);
 		self
 	}
 
 	/// Set `$expand` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theexpandsystemqueryoption)
 	/// for more details.
-	pub fn expand<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
-		match opt {
-			Some(items) => {
-				let items = items.into_iter()
-					.map(|v| v.into())
-					.collect();
-				self.expand = Some(items);
-			},
-			None => {
-				self.expand = None;
-			},
-		};
-
+	pub fn expand<T>(mut self, opt: T) -> Self where T: IntoIterator, T::Item: Into<String> {
+		let items = opt.into_iter()
+			.map(|v| v.into())
+			.collect();
+		self.expand = Some(items);
 		self
 	}
 
 	/// Set `$filter` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#thefiltersystemqueryoption)
 	/// for more details.
-	pub fn filter<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
-		match opt {
-			Some(items) => {
-				let items = items.into_iter()
-					.map(|v| v.into())
-					.collect();
-				self.filter = Some(items);
-			},
-			None => {
-				self.filter = None;
-			},
-		};
-
+	pub fn filter<T>(mut self, opt: T) -> Self where T: IntoIterator, T::Item: Into<String> {
+		let items = opt.into_iter()
+			.map(|v| v.into())
+			.collect();
+		self.filter = Some(items);
 		self
 	}
 
 	/// Set `$orderBy` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theorderbysystemqueryoption)
 	/// for more details.
-	pub fn order_by<T>(mut self, opt: Option<T>) -> Self where T: IntoIterator, T::Item: Into<String> {
-		match opt {
-			Some(items) => {
-				let items = items.into_iter()
-					.map(|v| v.into())
-					.collect();
-				self.order_by = Some(items);
-			},
-			None => {
-				self.order_by = None;
-			},
-		};
-
+	pub fn order_by<T>(mut self, opt: T) -> Self where T: IntoIterator, T::Item: Into<String> {
+		let items = opt.into_iter()
+			.map(|v| v.into())
+			.collect();
+		self.order_by = Some(items);
 		self
 	}
 
 	/// Set `$top` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#thetopsystemqueryoption)
 	/// for more details.
-	pub fn top<T>(mut self, opt: Option<T>) -> Self where T: Into<u32> {
-		match opt {
-			Some(amount) => {
-				self.top = Some(amount.into());
-			},
-			None => {
-				self.top = None;
-			},
-		};
-
+	pub fn top<T>(mut self, opt: T) -> Self where T: Into<u32> {
+		self.top = Some(opt.into());
 		self
 	}
 
 	/// Set `$skip` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theskipsystemqueryoption)
 	/// for more details.
-	pub fn skip<T>(mut self, opt: Option<T>) -> Self where T: Into<u32> {
-		match opt {
-			Some(amount) => {
-				self.skip = Some(amount.into());
-			},
-			None => {
-				self.skip = None;
-			},
-		};
-
+	pub fn skip<T>(mut self, opt: T) -> Self where T: Into<u32> {
+		self.skip = Some(opt.into());
 		self
 	}
 }
@@ -148,6 +125,10 @@ impl Into<String> for Parameters {
 
 		// Fill in options
 		let mut options: Vec<(&str, String)> = Vec::new();
+
+		if let Some(items) = self.custom {
+			options.extend(items);
+		};
 
 		if let Some(items) = self.select {
 			options.push(("$select", items.into_boxed_slice().join(",")));
@@ -203,9 +184,18 @@ mod tests {
 	}
 
 	#[test]
+	fn query_options_custom() {
+		let opts: String = Parameters::new()
+			.custom(vec![("a", "hello"), ("enable", "true")])
+			.custom_add(("price", "20"))
+			.into();
+		assert_eq!(opts, encode_pairs(vec![("a", "hello"), ("enable", "true"), ("price", "20")]));
+	}
+
+	#[test]
 	fn query_options_select() {
 		let opts: String = Parameters::new()
-			.select(Some(vec!["Field1", "Field2", "3"]))
+			.select(vec!["Field1", "Field2", "3"])
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$select", "Field1,Field2,3")]));
 	}
@@ -213,7 +203,7 @@ mod tests {
 	#[test]
 	fn query_options_expand() {
 		let opts: String = Parameters::new()
-			.expand(Some(vec!["Children", "Siblings"]))
+			.expand(vec!["Children", "Siblings"])
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$expand", "Children,Siblings")]));
 	}
@@ -221,7 +211,7 @@ mod tests {
 	#[test]
 	fn query_options_filter() {
 		let opts: String = Parameters::new()
-			.filter(Some(vec!["A eq B", "true"]))
+			.filter(vec!["A eq B", "true"])
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$filter", "A eq B and true")]));
 	}
@@ -229,7 +219,7 @@ mod tests {
 	#[test]
 	fn query_options_order_by() {
 		let opts: String = Parameters::new()
-			.order_by(Some(vec!["Date asc", "Time desc", "Id"]))
+			.order_by(vec!["Date asc", "Time desc", "Id"])
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$orderBy", "Date asc,Time desc,Id")]));
 	}
@@ -237,7 +227,7 @@ mod tests {
 	#[test]
 	fn query_options_top() {
 		let opts: String = Parameters::new()
-			.top(Some(10u32))
+			.top(10u32)
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$top", "10")]));
 	}
@@ -245,7 +235,7 @@ mod tests {
 	#[test]
 	fn query_options_skip() {
 		let opts: String = Parameters::new()
-			.skip(Some(9u32))
+			.skip(9u32)
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$skip", "9")]));
 	}
@@ -253,12 +243,12 @@ mod tests {
 	#[test]
 	fn query_options_all() {
 		let opts: String = Parameters::new()
-			.select(Some(vec!["Field1", "Field2", "3"]))
-			.expand(Some(vec!["Children", "Siblings"]))
-			.filter(Some(vec!["A eq B", "true"]))
-			.order_by(Some(vec!["Date asc", "Time desc", "Id"]))
-			.top(Some(10u32))
-			.skip(Some(9u32))
+			.select(vec!["Field1", "Field2", "3"])
+			.expand(vec!["Children", "Siblings"])
+			.filter(vec!["A eq B", "true"])
+			.order_by(vec!["Date asc", "Time desc", "Id"])
+			.top(10u32)
+			.skip(9u32)
 			.into();
 
 		let should_be = encode_pairs(vec![
