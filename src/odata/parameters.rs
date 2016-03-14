@@ -49,7 +49,7 @@ impl Parameters {
 		self
 	}
 
-	/// Add custom parameters
+	/// Add custom parameter
 	pub fn custom_add<V>(mut self, param: (&'static str, V)) -> Self where V: Into<String> {
 		match self.custom {
 			Some(ref mut items) => {
@@ -73,6 +73,20 @@ impl Parameters {
 		self
 	}
 
+	/// Add `$select` option
+	pub fn select_add<V>(mut self, opt: V) -> Self where V: Into<String> {
+		match self.select {
+			Some(ref mut items) => {
+				items.push(opt.into());
+			},
+			None => {
+				self.select = Some(vec![opt.into()]);
+			}
+		};
+
+		self
+	}
+
 	/// Set `$expand` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theexpandsystemqueryoption)
 	/// for more details.
 	pub fn expand<T>(mut self, opt: T) -> Self where T: IntoIterator, T::Item: Into<String> {
@@ -80,6 +94,20 @@ impl Parameters {
 			.map(|v| v.into())
 			.collect();
 		self.expand = Some(items);
+		self
+	}
+
+	/// Add `$expand` option
+	pub fn expand_add<V>(mut self, opt: V) -> Self where V: Into<String> {
+		match self.expand {
+			Some(ref mut items) => {
+				items.push(opt.into());
+			},
+			None => {
+				self.expand = Some(vec![opt.into()]);
+			}
+		};
+
 		self
 	}
 
@@ -93,6 +121,20 @@ impl Parameters {
 		self
 	}
 
+	/// Add `$filter` option
+	pub fn filter_add<V>(mut self, opt: V) -> Self where V: Into<String> {
+		match self.filter {
+			Some(ref mut items) => {
+				items.push(opt.into());
+			},
+			None => {
+				self.filter = Some(vec![opt.into()]);
+			}
+		};
+
+		self
+	}
+
 	/// Set `$orderBy` option. See [OData documentation](http://www.odata.org/documentation/odata-version-3-0/odata-version-3-0-core-protocol/#theorderbysystemqueryoption)
 	/// for more details.
 	pub fn order_by<T>(mut self, opt: T) -> Self where T: IntoIterator, T::Item: Into<String> {
@@ -100,6 +142,20 @@ impl Parameters {
 			.map(|v| v.into())
 			.collect();
 		self.order_by = Some(items);
+		self
+	}
+
+	/// Add `$orderBy` option
+	pub fn order_by_add<V>(mut self, opt: V) -> Self where V: Into<String> {
+		match self.order_by {
+			Some(ref mut items) => {
+				items.push(opt.into());
+			},
+			None => {
+				self.order_by = Some(vec![opt.into()]);
+			}
+		};
+
 		self
 	}
 
@@ -201,9 +257,28 @@ mod tests {
 	}
 
 	#[test]
+	fn query_options_select_add() {
+		let opts: String = Parameters::new()
+			.select_add("Field1")
+			.select_add("Field2")
+			.select_add("3")
+			.into();
+		assert_eq!(opts, encode_pairs(vec![("$select", "Field1,Field2,3")]));
+	}
+
+	#[test]
 	fn query_options_expand() {
 		let opts: String = Parameters::new()
 			.expand(vec!["Children", "Siblings"])
+			.into();
+		assert_eq!(opts, encode_pairs(vec![("$expand", "Children,Siblings")]));
+	}
+
+	#[test]
+	fn query_options_expand_add() {
+		let opts: String = Parameters::new()
+			.expand_add("Children")
+			.expand_add("Siblings")
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$expand", "Children,Siblings")]));
 	}
@@ -217,9 +292,28 @@ mod tests {
 	}
 
 	#[test]
+	fn query_options_filter_add() {
+		let opts: String = Parameters::new()
+			.filter_add("A eq B")
+			.filter_add("true")
+			.into();
+		assert_eq!(opts, encode_pairs(vec![("$filter", "A eq B and true")]));
+	}
+
+	#[test]
 	fn query_options_order_by() {
 		let opts: String = Parameters::new()
 			.order_by(vec!["Date asc", "Time desc", "Id"])
+			.into();
+		assert_eq!(opts, encode_pairs(vec![("$orderBy", "Date asc,Time desc,Id")]));
+	}
+
+	#[test]
+	fn query_options_order_by_add() {
+		let opts: String = Parameters::new()
+			.order_by_add("Date asc")
+			.order_by_add("Time desc")
+			.order_by_add("Id")
 			.into();
 		assert_eq!(opts, encode_pairs(vec![("$orderBy", "Date asc,Time desc,Id")]));
 	}
@@ -243,10 +337,14 @@ mod tests {
 	#[test]
 	fn query_options_all() {
 		let opts: String = Parameters::new()
-			.select(vec!["Field1", "Field2", "3"])
-			.expand(vec!["Children", "Siblings"])
-			.filter(vec!["A eq B", "true"])
-			.order_by(vec!["Date asc", "Time desc", "Id"])
+			.select(vec!["Field1", "Field2"])
+			.select_add("3")
+			.expand(vec!["Children"])
+			.expand_add("Siblings")
+			.filter(vec!["A eq B"])
+			.filter_add("true")
+			.order_by(vec!["Date asc", "Time desc"])
+			.order_by_add("Id")
 			.top(10u32)
 			.skip(9u32)
 			.into();
