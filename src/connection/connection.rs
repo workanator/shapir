@@ -1,6 +1,7 @@
 use std::io::Read;
 use std::sync::Arc;
 use hyper::client::{Client, Body};
+use hyper::client::response::Response;
 use hyper::method::Method;
 use hyper::header::{Headers, ContentType, Authorization, Bearer};
 use hyper::mime::{Mime, TopLevel, SubLevel};
@@ -148,7 +149,38 @@ impl Connection {
 		}
 	}
 
-	pub fn query(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<String> {
+	pub fn custom_request(&self, method: Method, url: String, headers: Option<Headers>, body: Option<String>) -> Result<Response> {
+		// Parse URL string into the internal representation
+		let url = match super::url::to_url(url) {
+			Ok(v) => v,
+			Err(err) => return Error::new("Invalid request URL").because(err).result()
+		};
+
+		// Unwrap body so it lives long enough
+		let body = match body {
+			Some(data) => data,
+			None => "".to_string()
+		};
+
+		// Build request
+		let mut request = self.client.request(method, url);
+
+		if let Some(headers) = headers {
+			request = request.headers(headers);
+		}
+
+		if body.len() > 0 {
+			request = request.body(Body::BufBody(body.as_bytes(), body.len()));
+		}
+
+		// .. send and unwrap to string
+		match request.send() {
+			Ok(response) => Ok(response),
+			Err(err) => Error::new("Custom request failed").because(err).result()
+		}
+	}
+
+	pub fn query(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<Response> {
 		if let Some(ref auth) = self.auth {
 			// Parse URL string into the internal representation
 			let url = match super::url::to_url(format!("{}{}", self.endpoint, uri)) {
@@ -176,18 +208,25 @@ impl Connection {
 			}
 
 			// .. send and unwrap to string
-			let mut response = match request.send() {
-				Ok(response) => response,
-				Err(err) => return Error::new("Request failed").because(err).result()
-			};
-
-			let mut data = String::new();
-			response.read_to_string(&mut data).unwrap();
-
-			Ok(data)
+			match request.send() {
+				Ok(response) => Ok(response),
+				Err(err) => Error::new("Query failed").because(err).result()
+			}
 		}
 		else {
 			Error::new("Not authenticated").result()
+		}
+	}
+
+	pub fn query_string(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<String> {
+		match self.query(method, uri, headers, body) {
+			Ok(mut response) => {
+				let mut data = String::new();
+				response.read_to_string(&mut data).unwrap();
+
+				Ok(data)
+			},
+			Err(err) => err.result()
 		}
 	}
 
