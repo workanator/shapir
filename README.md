@@ -14,4 +14,7 @@ let conn = Connection::new()
 	.client_secret("client-secret")
 	.connect()
 	.unwrap();
+
+let items = conn.items();
+let files = items.list(Path::Home, None).unwrap();
 ```

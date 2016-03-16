@@ -1,10 +1,14 @@
 [package]
 name = "shapir"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["workanator <workanator@gmail.com>"]
+description = "Unofficial ShareFile REST API SDK"
+keywords = ["ShareFile", "SDK", "REST"]
+license = "MIT"
+repository = "https://github.com/workanator/shapir"
 
 [dependencies]
-serde_json = "*"
-hyper = "*"
-url = "*"
-chrono = "*"
+serde_json = "0.7"
+hyper = "0.8"
+url = "0.5"
+chrono = "0.2"
