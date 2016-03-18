@@ -1,6 +1,7 @@
 use chrono::{DateTime, UTC};
 use serde_json::Value;
 use ::api::MultiOption;
+use super::{Path};
 use ::{Result, Error};
 
 
@@ -30,6 +31,10 @@ pub struct Item {
 
 
 impl Item {
+	pub fn path(self) -> Path {
+		Path::Id(self.id.clone())
+	}
+
 	pub fn from_value(value: Value, with_meta: bool) -> Result<MultiOption<Item>> {
 		// Check if we have one item or many
 		match value.find("odata.count") {
