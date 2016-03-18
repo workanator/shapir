@@ -31,7 +31,7 @@ pub struct Item {
 
 
 impl Item {
-	pub fn path(self) -> Path {
+	pub fn path(&self) -> Path {
 		Path::Id(self.id.clone())
 	}
 
