@@ -7,7 +7,7 @@ use serde_json;
 use ::connection::Connection;
 use ::odata::Parameters;
 use ::api::MultiOption;
-use ::Result;
+use ::{Result, Error};
 
 
 pub use self::path::Path;
@@ -48,8 +48,20 @@ impl Items {
 		}
 	}
 
-	pub fn download<T>(&self, id: T) -> Result<Content> where T: Into<String> {
-		Content::open_for_read(self.conn.clone(), id.into())
+	pub fn download(&self, path: Path) -> Result<Content> {
+		if let Path::Id(id) = path {
+			// We have the ID alredy so just start download
+			Content::open_for_read(self.conn.clone(), id)
+		}
+		else {
+			// We have a path which should be resolved to the id first
+			match self.stat(path, None) {
+				Ok(MultiOption::One(item)) => Content::open_for_read(self.conn.clone(), item.id),
+				Ok(MultiOption::Many(_)) => Error::new("There are more than one Item on path").result(),
+				Ok(MultiOption::None) => Error::new("The Item is not found").result(),
+				Err(err) => err.result()
+			}
+		}
 	}
 
 	fn query_items(&self, uri: String) -> Result<MultiOption<Item>> {
