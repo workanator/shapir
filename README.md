@@ -1,4 +1,4 @@
-# SHAPIR [![Build Status](https://travis-ci.org/workanator/shapir.svg?branch=master)](https://travis-ci.org/workanator/shapir) [![DUB](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/workanator/shapir/blob/master/LICENSE) [![Crates.io](https://img.shields.io/crates/v/rustc-serialize.svg)](https://crates.io/crates/shapir)  
+# SHAPIR [![Build Status](https://travis-ci.org/workanator/shapir.svg?branch=master)](https://travis-ci.org/workanator/shapir) [![DUB](https://img.shields.io/dub/l/vibe-d.svg)](https://github.com/workanator/shapir/blob/master/LICENSE)  
 Unofficial [ShareFile REST API](http://api.sharefile.com/rest/) SDK for [Rust](https://www.rust-lang.org/).
 
 ## First things first
