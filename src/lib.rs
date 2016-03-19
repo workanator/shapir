@@ -1,3 +1,12 @@
+//! Unofficial [ShareFile REST API](http://api.sharefile.com/rest/) SDK. The SKD tries to follow
+//! the composition of the REST API so with the `Connection` opened you can access API Entities
+//! described in the official documentation.  
+//!
+//! The library utilizes:
+//!
+//! - [hyper](https://crates.io/crates/hyper) for all low-level HTTP requests.
+//! - [serde_json](https://crates.io/crates/serde_json) as JSON encoding/decoding facility.
+
 extern crate serde_json;
 extern crate hyper;
 extern crate url;

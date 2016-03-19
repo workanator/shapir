@@ -57,6 +57,30 @@ impl AuthData {
 }
 
 
+/// Authentication and communication facility  
+///
+/// `Connection` is used for initial authentication and further access to API Entities.
+/// Usual application uses the SDK starts with opening the connection to the REST API.
+///
+/// The struct has public methods for performing custom HTTP requests and API calls.
+/// Most time there is no need to execute those methods manualy and they are used internally
+/// by API Entities.
+///
+/// ## Example
+///
+/// ```
+/// use shapir::Connection;
+/// 
+/// let conn = Connection::new()
+/// 	.subdomain("your-subdomain")
+/// 	.username("your.username@mail.com")
+/// 	.password("your-password")
+/// 	.client_id("client-id")
+/// 	.client_secret("client-secret")
+/// 	.connect()
+/// 	.unwrap();
+/// ```
+
 #[derive(Clone)]
 pub struct Connection {
 	client: Arc<Client>,
@@ -67,10 +91,13 @@ pub struct Connection {
 
 
 impl Connection {
+	/// Create the instance of `ConnectionBuilder` which helps configuring
+	/// the connection sesstings.
 	pub fn new() -> ConnectionBuilder {
 		ConnectionBuilder::new()
 	}
 
+	/// Create the configured `Connection` using given settings.
 	pub fn configured(settings: ConnectionSettings) -> Connection {
 		Connection {
 			client: Arc::new(Client::new()),
@@ -80,6 +107,8 @@ impl Connection {
 		}
 	}
 
+	/// Connect to ShareFile REST API. Behind the scene it does login and obtains authentication tokens
+	/// used in all API requests to the API.
 	pub fn connect(mut self) -> Result<Connection> {
 		use url::form_urlencoded;
 
@@ -149,6 +178,7 @@ impl Connection {
 		}
 	}
 
+	/// Perform the low-level custom HTTP request. Hyper's `Response` is returned on success.
 	pub fn custom_request(&self, method: Method, url: String, headers: Option<Headers>, body: Option<String>) -> Result<Response> {
 		// Parse URL string into the internal representation
 		let url = match super::url::to_url(url) {
@@ -180,6 +210,7 @@ impl Connection {
 		}
 	}
 
+	/// Perform the call to the API. Hyper's `Response` is returned on success.
 	pub fn query(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<Response> {
 		if let Some(ref auth) = self.auth {
 			// Parse URL string into the internal representation
@@ -188,7 +219,7 @@ impl Connection {
 				Err(err) => return Error::new("Invalid request URL").because(err).result()
 			};
 
-			// Unwrap body so it live long enough
+			// Unwrap body so it lives long enough
 			let body = match body {
 				Some(data) => data,
 				None => "".to_string()
@@ -218,6 +249,7 @@ impl Connection {
 		}
 	}
 
+	/// Perform the call to the API. JSON string (API response) is returned on success.
 	pub fn query_string(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<String> {
 		match self.query(method, uri, headers, body) {
 			Ok(mut response) => {
@@ -230,6 +262,7 @@ impl Connection {
 		}
 	}
 
+	/// Get [Items](http://api.sharefile.com/rest/docs/resource.aspx?name=Items) API Entity.
 	pub fn items(&self) -> ::api::items::Items {
 		::api::items::Items::new(self.clone())
 	}

@@ -1,3 +1,5 @@
+//! REST API connection
+
 mod connection;
 mod builder;
 mod settings;

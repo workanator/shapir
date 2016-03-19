@@ -1,3 +1,6 @@
+//! REST API Entities implementation
+
+
 pub mod items;
 
 

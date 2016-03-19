@@ -1,3 +1,6 @@
+//! Error type used in the library
+
+
 use std;
 use std::fmt;
 use std::ops::Deref;
