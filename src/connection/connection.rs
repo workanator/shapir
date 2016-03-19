@@ -66,9 +66,9 @@ impl AuthData {
 /// Most time there is no need to execute those methods manualy and they are used internally
 /// by API Entities.
 ///
-/// ## Example
+/// # Examples
 ///
-/// ```
+/// ```should_panic
 /// use shapir::Connection;
 /// 
 /// let conn = Connection::new()
