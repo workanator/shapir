@@ -32,3 +32,7 @@ let conn = Connection::new()
 let items = conn.items();
 let files = items.list(Path::Home, None).unwrap();
 ```
+
+## Contributing
+
+Contribution is always welcome.
