@@ -15,6 +15,21 @@ The workflow of the SDK usage looks like this:
 2. Obtain the required API Entity using the right method of the `Connection`.  
 3. Perform required operations on the API entity.  
 
+## Usage
+
+Add this to Cargo.toml
+
+```toml
+[dependencies]
+shapir = "0.0.2"
+```
+
+and this to your crate root:
+
+```rust
+extern crate shapir;
+```
+
 ## Example
 
 ```rust
