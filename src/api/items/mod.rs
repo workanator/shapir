@@ -1,4 +1,5 @@
 mod path;
+mod kind;
 mod item;
 mod content;
 
@@ -11,7 +12,8 @@ use ::{Result, Error};
 
 
 pub use self::path::Path;
-pub use self::item::{Item, Kind};
+pub use self::kind::Kind;
+pub use self::item::Item;
 pub use self::content::Content;
 
 
@@ -23,6 +25,7 @@ pub struct Items {
 
 
 impl Items {
+	/// Create a new instance of Item Entities API
 	pub fn new(conn: Connection) -> Self {
 		Items {
 			conn: conn,
@@ -30,14 +33,20 @@ impl Items {
 		}
 	}
 
+	/// Set the flag to inform all future API requests to include item meta information
+	/// or omit it.
 	pub fn include_meta(&mut self, include: bool) {
 		self.meta = include;
 	}
 
+	/// Search for Item(s) at the `path` given and return found. `parameters` can be used
+	/// to provide additional options to the API request, like `includeDeleted`.
 	pub fn stat(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
 		self.query_items(path.entity_and_parameters(None, parameters))
 	}
 
+	/// List all items at the `path` given. `parameters` can be used
+	/// to provide additional options to the API request, like `includeDeleted`.
 	pub fn list(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
 		match self.stat(path, None) {
 			Ok(MultiOption::One(item)) => {
@@ -48,6 +57,7 @@ impl Items {
 		}
 	}
 
+	/// Download the item identified by `path`.
 	pub fn download(&self, path: Path) -> Result<Content> {
 		if let Path::Id(id) = path {
 			// We have the ID alredy so just start download

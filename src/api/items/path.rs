@@ -27,6 +27,7 @@ pub enum Path {
 
 
 impl Path {
+	/// Used internally to build OAuth URIs.
 	pub fn entity_and_parameters(&self, segment: Option<&str>, parameters: Option<Parameters>) -> String {
 		let segment = match segment {
 			Some(segment) => segment,

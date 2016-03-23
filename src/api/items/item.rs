@@ -1,40 +1,43 @@
 use chrono::{DateTime, UTC};
 use serde_json::Value;
 use ::api::MultiOption;
-use super::{Path};
+use super::{Path, Kind};
 use ::{Result, Error};
-
-
-/// Item kind
-#[derive(Debug, Clone, PartialEq)]
-pub enum Kind {
-	/// Folder
-	Folder,
-	/// File
-	File,
-}
 
 
 /// Item
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
+	/// `Kind` of the item
 	pub kind: Kind,
+	/// ID of the item
 	pub id: String,
+	/// URL
 	pub url: String,
+	/// Item name
 	pub name: String,
+	/// Item file name
 	pub filename: String,
+	/// Item description
 	pub description: String,
+	/// Item size
 	pub size: u64,
+	/// Item creation date and time
 	pub creation_date: DateTime<UTC>,
+	/// Meta information as it returned from ShareFile REST API
 	pub meta: Option<Value>,
 }
 
 
 impl Item {
+	/// Get the `Path` pointing to the item
 	pub fn path(&self) -> Path {
 		Path::Id(self.id.clone())
 	}
 
+	/// Construct item(s) from the decoded JSON value. If `with_meta` is `true` then
+	/// `Item.meta` field of the each item will be filled with the JSON value
+	/// representing that item.
 	pub fn from_value(value: Value, with_meta: bool) -> Result<MultiOption<Item>> {
 		// Check if we have one item or many
 		match value.find("odata.count") {
@@ -59,6 +62,7 @@ impl Item {
 	}
 
 	fn item_from_value(value: &Value, with_meta: bool) -> Result<Item> {
+		// Which kind the item of
 		let kind = match value.find("odata.type") {
 			Some(otype) => match otype.as_string().unwrap() {
 				"ShareFile.Api.Models.Folder" => Kind::Folder,
@@ -70,36 +74,43 @@ impl Item {
 			}
 		};
 
+		// Get item ID
 		let id = match value.find("Id") {
 			Some(v) => v.as_string().unwrap(),
 			None => return Error::new("Item.Id property is missing.").result()
 		};
 
+		// Get item URL
 		let url = match value.find("url") {
 			Some(v) => v.as_string().unwrap(),
 			None => return Error::new("Item.url property is missing.").result()
 		};
 
+		// Get item name
 		let name = match value.find("Name") {
 			Some(v) => v.as_string().unwrap(),
 			None => return Error::new("Item.Name property is missing.").result()
 		};
 
+		// Get item file name
 		let filename = match value.find("FileName") {
 			Some(v) => v.as_string().unwrap(),
 			None => return Error::new("Item.FileName property is missing.").result()
 		};
 
+		// Get item description
 		let description = match value.find("Description") {
 			Some(v) => v.as_string().unwrap(),
 			None => return Error::new("Item.Description property is missing.").result()
 		};
 
+		// Get item size
 		let size = match value.find("FileSizeBytes") {
 			Some(v) => v.as_u64().unwrap(),
 			None => return Error::new("Item.FileSizeBytes property is missing.").result()
 		};
 
+		// Get item creation date and time
 		let creation_date = match value.find("CreationDate") {
 			Some(v) => match v.as_string().unwrap().parse::<DateTime<UTC>>() {
 				Ok(dt) => dt,
@@ -108,6 +119,7 @@ impl Item {
 			None => return Error::new("Item.CreationDate property is missing.").result()
 		};
 
+		// Add meta to the item if requested
 		let meta = if with_meta {
 			Some(value.clone())
 		}
@@ -115,6 +127,7 @@ impl Item {
 			None
 		};
 
+		// COnstruct and return item
 		Ok(Item {
 			kind: kind,
 			id: id.to_owned(),
