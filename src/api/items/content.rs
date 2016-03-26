@@ -7,13 +7,24 @@ use ::odata::Parameters;
 use super::Path;
 
 
-/// Item content reader/writer
+/// Item content reader/writer.  
+///
+/// The struct implementds `std::io::Read` and `std::io::Write` traits so it can be used
+/// neat abilities of the standard Rust library to read and write data.
+///
+/// ## Panics 
+/// The instance of `Content` can only read or only write data during the lifetime.
+/// Writing data will panic if `Content` was created fo reading data and reading data
+/// will panic of it was created for writing.
 pub struct Content {
 	stream: Box<io::Read>,
 }
 
 
 impl Content {
+	/// Create the new instance of `Content` for reading data. Most time there is no need
+	/// to create this struct directly. The better practice is to use method `download()`
+	/// of the `Items` instance.
 	pub fn open_for_read(conn: Connection, id: String) -> Result<Self> {
 		let params = Parameters::new().custom_add(("redirect", "false"));
 		let uri = Path::Id(id).entity_and_parameters(Some("/Download"), Some(params));
