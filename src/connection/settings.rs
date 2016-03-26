@@ -1,9 +1,18 @@
-#[derive(Debug, Clone)]
+/// Connection settings  
+///
+/// For details on field purpose please refer the official REST API
+/// [documentation](http://api.sharefile.com/rest/index/start.aspx)
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ConnectionSettings {
+	/// Subdomain (*required*)
 	pub subdomain: Option<String>,
+	/// Username (*required*)
 	pub username: Option<String>,
+	/// Password (*required*)
 	pub password: Option<String>,
+	/// Client ID (*required*)
 	pub client_id: Option<String>,
+	/// Client Secret (*required*)
 	pub client_secret: Option<String>,
 }
 
