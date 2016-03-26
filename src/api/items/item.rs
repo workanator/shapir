@@ -5,7 +5,7 @@ use super::{Path, Kind};
 use ::{Result, Error};
 
 
-/// Item
+/// Item details
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
 	/// `Kind` of the item
