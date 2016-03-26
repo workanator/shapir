@@ -1,3 +1,6 @@
+//! Items Entity
+
+
 mod path;
 mod kind;
 mod item;
@@ -17,7 +20,9 @@ pub use self::item::Item;
 pub use self::content::Content;
 
 
-/// Items Entities
+/// Items Entity implementation.
+///
+/// Items struct implemets methods of [Items API Entity](http://api.sharefile.com/rest/docs/resource.aspx?name=Items)
 pub struct Items {
 	conn: Connection,
 	meta: bool,
@@ -57,7 +62,25 @@ impl Items {
 		}
 	}
 
-	/// Download the item identified by `path`.
+	/// Download the item identified by `path`. The method returns reader which can be used
+	/// to read data in any convenient manner.  
+	///
+	/// The snippet of how the remote file can be downloaded to local.
+	///
+	/// ```ignore
+	/// // Lets assume we have the opened connection already
+	/// let path = Path::Absolute("/my_folder/remote_file.txt");
+	///	let mut stream = conn.items().download(path).unwrap();
+	/// let mut file = File::create("local_file.txt").unwrap();
+	/// let mut buf = [0; 1024];
+	/// loop {
+	/// 	match stream.read(&mut buf) {
+	///			Ok(0) => break, // Zero bytes mean the end of file
+	///			Ok(n) => file.write_all(&buf[0..n]).unwrap(),
+	///			Err(err) => panic!("{:?}", err)
+	///		};
+	///	}
+	/// ```
 	pub fn download(&self, path: Path) -> Result<Content> {
 		if let Path::Id(id) = path {
 			// We have the ID alredy so just start download
