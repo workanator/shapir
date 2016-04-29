@@ -6,8 +6,9 @@ mod kind;
 mod item;
 mod content;
 
+use std::collections::BTreeMap;
 use hyper::method::Method;
-use serde_json;
+use serde_json::{self, Value};
 use ::connection::Connection;
 use ::odata::Parameters;
 use ::api::MultiOption;
@@ -44,6 +45,22 @@ impl Items {
 		self.meta = include;
 	}
 
+	/// Resolve given `path` to the Item ID. On success returns `Some(Path::Id(id))`
+	// and None otherwise.
+	pub fn resolve_path(&self, path: Path) -> Option<Path> {
+		if let &Path::Id(_) = &path {
+			// The path is the ID already
+			Some(path)
+		}
+		else {
+			// Resolve the path to the ID
+			match self.stat(path, None) {
+				Ok(MultiOption::One(item)) => Some(item.path()),
+				_ => None
+			}
+		}
+	}
+
 	/// Search for Item(s) at the `path` given and return found. `parameters` can be used
 	/// to provide additional options to the API request, like `includeDeleted`.
 	pub fn stat(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
@@ -54,11 +71,44 @@ impl Items {
 	/// to provide additional options to the API request, like `includeDeleted`.
 	pub fn list(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
 		match self.stat(path, None) {
-			Ok(MultiOption::One(item)) => {
-				self.query_items(Path::Id(item.id).entity_and_parameters(Some("/Children"), parameters))
+			Ok(MultiOption::One(item)) => match item.kind {
+				Kind::Folder => {
+					self.query_items(item.path().entity_and_parameters(Some("/Children"), parameters))
+				},
+				Kind::File => {
+					Ok(MultiOption::One(item))
+				}
 			},
 			Ok(other) => Ok(other),
 			Err(err) => err.result()
+		}
+	}
+
+	/// Create folder with `parent` item and `name` given. On success returns the path with the ID
+	/// of the folder created.
+	pub fn create_folder<T>(&self, parent: Path, name: T, description: Option<T>, overwite: bool) -> Result<Path>
+	where T: Into<String> {
+		if let Some(path) = self.resolve_path(parent) {
+			// Prepare folder details
+			let mut data = BTreeMap::new();
+			data.insert(String::from("Name"), Value::String(name.into()));
+
+			if let Some(desc) = description {
+				data.insert(String::from("Description"), Value::String(desc.into()));
+			}
+
+			let body = Value::Object(data);
+
+			// Create folder
+			let parameters = Parameters::new()
+				.custom(vec![("overwite", super::bool_to_string(overwite)), ("passthrough", String::from("false"))]);
+
+			let url = path.entity_and_parameters(Some("/Folder"), Some(parameters));
+			let result = self.query_create(url, Some(body));
+			panic!("{:?}", result);
+		}
+		else {
+			Error::new("Cannot resolve parent ID").result()
 		}
 	}
 
@@ -97,9 +147,29 @@ impl Items {
 		}
 	}
 
+	// Do API request which creates new Items (POST)
+	fn query_create(&self, uri: String, data: Option<Value>) -> Result<Value> {
+		let body = match data {
+			Some(ref value) => Some(serde_json::to_string(value).unwrap()),
+			None => None
+		};
+
+		match self.conn.query_string(Method::Post, uri, None, body) {
+			Ok(ref json) => match serde_json::from_str(json) {
+				Ok(data) => Ok(data),
+				Err(err) => Error::new("JSON parse failed").because(err).result()
+			},
+			Err(err) => err.result()
+		}
+	}
+
+	// Do API request which returns Item Collection (GET)
 	fn query_items(&self, uri: String) -> Result<MultiOption<Item>> {
 		match self.conn.query_string(Method::Get, uri, None, None) {
-			Ok(json) => Item::from_value(serde_json::from_str(&json).unwrap(), self.meta),
+			Ok(ref json) => match serde_json::from_str(json) {
+				Ok(data) => Item::from_value(data, self.meta),
+				Err(err) => Error::new("JSON parse failed").because(err).result()
+			},
 			Err(err) => err.result()
 		}
 	}
