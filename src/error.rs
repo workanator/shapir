@@ -89,3 +89,24 @@ impl fmt::Display for Error {
 		}
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+	use super::Error;
+	use serde_json::{self, Value};
+
+	#[test]
+	fn parse_error_json() {
+		let data: Value = serde_json::from_str("{\"code\":\"BadRequest\",\"message\":{\"lang\":\"en-US\",\"value\":\"Invalid Argument Items.Folder\"},\"reason\":\"BadRequest\"}").unwrap();
+		let error = Error::from_json(data);
+		assert!(error.is_err());
+	}
+
+	#[test]
+	fn parse_success_json() {
+		let data: Value = serde_json::from_str("{\"Id\":\"some-file-id\"}").unwrap();
+		let error = Error::from_json(data);
+		assert!(error.is_ok());
+	}
+}
