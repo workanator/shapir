@@ -140,6 +140,7 @@ impl Path {
 #[cfg(test)]
 mod tests {
 	use super::Path;
+	use serde_json::{self, Value};
 
 	#[test]
 	fn path_home() {
@@ -199,5 +200,28 @@ mod tests {
 	fn path_parent() {
 		let path = Path::Parent("up".to_owned());
 		assert!(path.is_parent());
+	}
+
+	#[test]
+	fn parse_valid_path() {
+		let data: Value = serde_json::from_str("{\"Id\":\"fi111111-2222-3333-4444-555555555555\"}").unwrap();
+		let path = Path::from_json(data).unwrap();
+		assert!(path.is_id());
+	}
+
+	#[test]
+	#[should_panic]
+	fn parse_invalid_path() {
+		let data: Value = serde_json::from_str("{\"code\":\"error\"}").unwrap();
+		let _ = Path::from_json(data).unwrap();
+	}
+
+	#[test]
+	fn parse_path_id() {
+		let data: Value = serde_json::from_str("{\"Id\":\"fi111111-2222-3333-4444-555555555555\"}").unwrap();
+		match Path::from_json(data).unwrap() {
+			Path::Id(id) => assert_eq!(id, "fi111111-2222-3333-4444-555555555555"),
+			_ => panic!("Parsed Path must be Id")
+		};
 	}
 }
