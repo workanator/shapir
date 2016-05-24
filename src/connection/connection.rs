@@ -138,14 +138,14 @@ impl Connection {
 			&None => return Error::new("Client Secret is required").result()
 		};
 
-		let mut form_data: Vec<(&str, String)> = Vec::new();
-		form_data.push(("grant_type", "password".to_string()));
-		form_data.push(("client_id", client_id));
-		form_data.push(("client_secret", client_secret));
-		form_data.push(("username", username));
-		form_data.push(("password", password));
-
-		let body = form_urlencoded::serialize(form_data);
+		let form_data: String = form_urlencoded::Serializer::new(String::new())
+			.append_pair("grant_type", "password")
+			.append_pair("client_id", &client_id)
+			.append_pair("client_secret", &client_secret)
+			.append_pair("username", &username)
+			.append_pair("password", &password)
+			.finish();
+		let form_data_len = form_data.len();
 
 		let url = match super::url::to_url(format!("https://{}.sharefile.com/oauth/token", subdomain)) {
 			Ok(v) => v,
@@ -155,7 +155,7 @@ impl Connection {
 		// Try to authenticate on ShareFile
 		let response = self.client.request(Method::Post, url)
 			.header(ContentType(Mime(TopLevel::Application, SubLevel::WwwFormUrlEncoded, vec![])))
-			.body(Body::BufBody(body.as_bytes(), body.len()))
+			.body(Body::BufBody(&form_data.into_bytes()[..], form_data_len))
 			.send();
 
 		let mut response = match response {
@@ -266,4 +266,5 @@ impl Connection {
 	pub fn items(&self) -> ::api::items::Items {
 		::api::items::Items::new(self.clone())
 	}
+
 }

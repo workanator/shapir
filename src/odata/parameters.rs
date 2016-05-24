@@ -180,38 +180,38 @@ impl Into<String> for Parameters {
 		use url::form_urlencoded;
 
 		// Fill in options
-		let mut options: Vec<(&str, String)> = Vec::new();
+		let mut options = form_urlencoded::Serializer::new(String::new());
 
 		if let Some(items) = self.custom {
-			options.extend(items);
+			options.extend_pairs(items);
 		};
 
 		if let Some(items) = self.select {
-			options.push(("$select", items.into_boxed_slice().join(",")));
+			options.append_pair("$select", &items.into_boxed_slice().join(","));
 		};
 
 		if let Some(items) = self.expand {
-			options.push(("$expand", items.into_boxed_slice().join(",")));
+			options.append_pair("$expand", &items.into_boxed_slice().join(","));
 		};
 
 		if let Some(items) = self.filter {
-			options.push(("$filter", items.into_boxed_slice().join(" and ")));
+			options.append_pair("$filter", &items.into_boxed_slice().join(" and "));
 		};
 
 		if let Some(items) = self.order_by {
-			options.push(("$orderBy", items.into_boxed_slice().join(",")));
+			options.append_pair("$orderBy", &items.into_boxed_slice().join(","));
 		};
 
 		if let Some(num) = self.top {
-			options.push(("$top", num.to_string()));
+			options.append_pair("$top", &num.to_string());
 		};
 
 		if let Some(num) = self.skip {
-			options.push(("$skip", num.to_string()));
+			options.append_pair("$skip", &num.to_string());
 		};
 
 		// Convert OData options into URL query
-		form_urlencoded::serialize(options)
+		options.finish()
 	}
 }
 
@@ -229,7 +229,9 @@ mod tests {
 
 	fn encode_pairs(v: Vec<(&str, &str)>) -> String {
 		use url::form_urlencoded;
-		form_urlencoded::serialize(v)
+		form_urlencoded::Serializer::new(String::new())
+			.extend_pairs(v)
+			.finish()
 	}
 
 	#[test]
