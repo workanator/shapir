@@ -9,7 +9,7 @@ mod content;
 use std::collections::BTreeMap;
 use hyper::method::Method;
 use serde_json::{self, Value};
-use ::connection::{Connection, Helper};
+use ::connection::Connection;
 use ::odata::Parameters;
 use ::api::MultiOption;
 use ::{Result, Error};
@@ -107,7 +107,7 @@ impl Items {
 
 			let url = path.entity_and_parameters(Some("/Folder"), Some(parameters));
 			
-			self.query_create(url, Some(body))
+			self.conn.query_post(url, Some(body))
 				.and_then(|r| Error::from_json(r))
 				.and_then(|v| Path::from_json(v))
 		}
@@ -131,7 +131,7 @@ impl Items {
 
 				let url = path.entity_and_parameters(None, Some(parameters));
 
-				self.query_delete(url)
+				self.conn.query_delete(url)
 					.map(|_| ())
 			})
 	}
@@ -169,35 +169,6 @@ impl Items {
 				Err(err) => err.result()
 			}
 		}
-	}
-
-	// Do API request which creates new Items (POST)
-	fn query_create(&self, uri: String, data: Option<Value>) -> Result<Value> {
-		let body = match data {
-			Some(ref value) => Some(serde_json::to_string(value).unwrap()),
-			None => None
-		};
-
-		match self.conn.query_string(Method::Post, uri, Some(Helper::json_headers()), body) {
-			Ok(ref json) => match serde_json::from_str(json) {
-				Ok(data) => Ok(data),
-				Err(err) => Error::new("JSON parse failed").because(err).result()
-			},
-			Err(err) => err.result()
-		}
-	}
-
-	// Do API DELETE request
-	fn query_delete(&self, uri: String) -> Result<()> {
-		self.conn.query(Method::Delete, uri, None, None)
-			.and_then(|response| {
-				if response.status.is_success() {
-					Ok(())
-				}
-				else {
-					Error::new(format!("API DELETE request failed with status {}", response.status)).result()
-				}
-			})
 	}
 
 	// Do API request which returns Item Collection (GET)

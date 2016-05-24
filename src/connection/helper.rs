@@ -2,10 +2,10 @@ use hyper::header::{Headers, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 
 
-pub struct Helper;
+pub struct ConnectionHelper;
 
 
-impl Helper {
+impl ConnectionHelper {
 
 	/// Helper metod for creating headers containing `Content-Type: application/json`.
 	pub fn json_headers() -> Headers {

@@ -7,7 +7,7 @@ use hyper::header::{Headers, ContentType, Authorization, Bearer};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use serde_json::{self, Value};
 use ::{Result, Error};
-use super::{ConnectionSettings, ConnectionBuilder};
+use super::{ConnectionSettings, ConnectionBuilder, ConnectionHelper};
 
 
 #[derive(Debug, Clone)]
@@ -260,6 +260,35 @@ impl Connection {
 			},
 			Err(err) => err.result()
 		}
+	}
+
+	// Do API POST request
+	pub fn query_post(&self, uri: String, data: Option<Value>) -> Result<Value> {
+		let body = match data {
+			Some(ref value) => Some(serde_json::to_string(value).unwrap()),
+			None => None
+		};
+
+		match self.query_string(Method::Post, uri, Some(ConnectionHelper::json_headers()), body) {
+			Ok(ref json) => match serde_json::from_str(json) {
+				Ok(data) => Ok(data),
+				Err(err) => Error::new("JSON parse failed").because(err).result()
+			},
+			Err(err) => err.result()
+		}
+	}
+
+	// Do API DELETE request
+	pub fn query_delete(&self, uri: String) -> Result<()> {
+		self.query(Method::Delete, uri, None, None)
+			.and_then(|response| {
+				if response.status.is_success() {
+					Ok(())
+				}
+				else {
+					Error::new(format!("API DELETE request failed with status {}", response.status)).result()
+				}
+			})
 	}
 
 	/// Get [Items](http://api.sharefile.com/rest/docs/resource.aspx?name=Items) API Entity.
