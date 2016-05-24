@@ -1,3 +1,5 @@
+use serde_json::Value;
+use ::{Error, Result};
 use ::odata::Parameters;
 
 /// Item path
@@ -109,15 +111,8 @@ impl Path {
 
 	/// Used internally to build OAuth URIs.
 	pub fn entity_and_parameters(&self, segment: Option<&str>, parameters: Option<Parameters>) -> String {
-		let segment = match segment {
-			Some(segment) => segment,
-			None => ""
-		};
-
-		let parameters: String = match parameters {
-			Some(opts) => opts.to_string(),
-			None => "".to_owned()
-		};
+		let segment = segment.map_or("", |s| s);
+		let parameters = parameters.map_or(String::from(""), |p| p.to_string());
 
 		match self {
 			&Path::Home => format!("Items(home){}?{}", segment, parameters),
@@ -131,6 +126,13 @@ impl Path {
 			&Path::Relative(ref id, ref path) => format!("Items({})/ByPath?path={}&{}", id, path, parameters),
 			&Path::Parent(ref id) => format!("Items({})/Parent&{}", id, parameters),
 		}
+	}
+
+	// Parse the path from the result JSON
+	pub fn from_json(value: Value) -> Result<Path> {
+		value.find("Id")
+			.ok_or(Error::new("Cannot find Item ID"))
+			.map(|id| Path::Id(id.as_string().unwrap().to_owned()))
 	}
 }
 
