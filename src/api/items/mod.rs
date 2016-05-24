@@ -101,7 +101,7 @@ impl Items {
 
 			// Create folder
 			let parameters = Parameters::new()
-				.custom(vec![("overwite", super::bool_to_string(overwite)), ("passthrough", String::from("false"))]);
+				.custom(vec![("overwrite", super::bool_to_string(overwite)), ("passthrough", String::from("false"))]);
 
 			let url = path.entity_and_parameters(Some("/Folder"), Some(parameters));
 			
