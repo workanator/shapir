@@ -9,7 +9,7 @@ mod content;
 use std::collections::BTreeMap;
 use hyper::method::Method;
 use serde_json::{self, Value};
-use ::connection::Connection;
+use ::connection::{Connection, Helper};
 use ::odata::Parameters;
 use ::api::MultiOption;
 use ::{Result, Error};
@@ -104,8 +104,10 @@ impl Items {
 				.custom(vec![("overwite", super::bool_to_string(overwite)), ("passthrough", String::from("false"))]);
 
 			let url = path.entity_and_parameters(Some("/Folder"), Some(parameters));
-			let result = self.query_create(url, Some(body));
-			panic!("{:?}", result);
+			
+			self.query_create(url, Some(body))
+				.and_then(|r| Error::from_json(r))
+				.and_then(|v| Path::from_json(v))
 		}
 		else {
 			Error::new("Cannot resolve parent ID").result()
@@ -154,7 +156,7 @@ impl Items {
 			None => None
 		};
 
-		match self.conn.query_string(Method::Post, uri, None, body) {
+		match self.conn.query_string(Method::Post, uri, Some(Helper::json_headers()), body) {
 			Ok(ref json) => match serde_json::from_str(json) {
 				Ok(data) => Ok(data),
 				Err(err) => Error::new("JSON parse failed").because(err).result()
