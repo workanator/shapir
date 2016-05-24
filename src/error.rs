@@ -4,6 +4,7 @@
 use std;
 use std::fmt;
 use std::ops::Deref;
+use serde_json::Value;
 
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -41,6 +42,28 @@ impl Error {
 	/// Consumes self and retuns `Err` variant of `Result<T, Error>`.
 	pub fn result<T>(self) -> Result<T> {
 		Err(self)
+	}
+
+	// Parse the error from the result JSON
+	pub fn from_json(value: Value) -> Result<Value> {
+		match value.clone().find("code") {
+			Some(code_value) => {
+				// Get error code
+				let code = code_value.as_string()
+					.unwrap();
+
+				// Get error message
+				let message = value.find("message")
+					.unwrap()
+					.find("value")
+					.unwrap()
+					.as_string()
+					.unwrap();
+
+				Error::new(format!("{}: {}", code, message)).result()
+			},
+			None => Ok(value)
+		}
 	}
 }
 
