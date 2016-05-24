@@ -84,9 +84,9 @@ impl Items {
 		}
 	}
 
-	/// Create folder with `parent` item and `name` given. On success returns the path with the ID
+	/// Create folder with `parent` item and `name` given. On success returns the `Path` with the ID
 	/// of the folder created.
-	pub fn create_folder<T>(&self, parent: Path, name: T, description: Option<T>, overwite: bool) -> Result<Path>
+	pub fn mkdir<T>(&self, parent: Path, name: T, description: Option<T>, overwite: bool) -> Result<Path>
 	where T: Into<String> {
 		if let Some(path) = self.resolve_path(parent) {
 			// Prepare folder details
@@ -101,7 +101,9 @@ impl Items {
 
 			// Create folder
 			let parameters = Parameters::new()
-				.custom(vec![("overwrite", super::bool_to_string(overwite)), ("passthrough", String::from("false"))]);
+				.custom(vec![
+					("overwrite", super::bool_to_string(overwite)),
+					("passthrough", String::from("false")) ]);
 
 			let url = path.entity_and_parameters(Some("/Folder"), Some(parameters));
 			
@@ -112,6 +114,26 @@ impl Items {
 		else {
 			Error::new("Cannot resolve parent ID").result()
 		}
+	}
+
+	/// Removes the item with the ID given. `single_version` set to `true` will delete
+	/// only the specified version rather than all sibling files with the same filename
+	/// and `force_sync` set to `true` will block the operation from taking place
+	/// asynchronously.
+	pub fn remove(&self, path: Path, single_version: bool, force_sync: bool) -> Result<()> {
+		self.resolve_path(path)
+			.ok_or(Error::new("The Item is not found"))
+			.and_then(|path| {
+				let parameters = Parameters::new()
+					.custom(vec![
+						("singleversion", super::bool_to_string(single_version)),
+						("forceSync", super::bool_to_string(force_sync)) ]);
+
+				let url = path.entity_and_parameters(None, Some(parameters));
+
+				self.query_delete(url)
+					.map(|_| ())
+			})
 	}
 
 	/// Download the item identified by `path`. The method returns reader which can be used
@@ -163,6 +185,19 @@ impl Items {
 			},
 			Err(err) => err.result()
 		}
+	}
+
+	// Do API DELETE request
+	fn query_delete(&self, uri: String) -> Result<()> {
+		self.conn.query(Method::Delete, uri, None, None)
+			.and_then(|response| {
+				if response.status.is_success() {
+					Ok(())
+				}
+				else {
+					Error::new(format!("API DELETE request failed with status {}", response.status)).result()
+				}
+			})
 	}
 
 	// Do API request which returns Item Collection (GET)
