@@ -29,6 +29,14 @@ pub enum Path {
 
 
 impl Path {
+	/// Get Item ID if the Path is Id or empty string otherwise.
+	pub fn id(&self) -> String {
+		match self {
+			&Path::Id(ref id) => id.clone(),
+			_ => String::new()
+		}
+	}
+
 	/// Test if path points to the home folder
 	pub fn is_home(&self) -> bool {
 		match self {
