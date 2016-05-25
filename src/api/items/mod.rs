@@ -8,7 +8,7 @@ mod content;
 
 use std::collections::BTreeMap;
 use hyper::method::Method;
-use serde_json::{self, Value};
+use serde_json::Value;
 use ::connection::Connection;
 use ::odata::Parameters;
 use ::api::MultiOption;
@@ -64,7 +64,7 @@ impl Items {
 	/// Search for Item(s) at the `path` given and return found. `parameters` can be used
 	/// to provide additional options to the API request, like `includeDeleted`.
 	pub fn stat(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
-		self.query_items(path.entity_and_parameters(None, parameters))
+		self.get_items(path.entity_and_parameters(None, parameters))
 	}
 
 	/// List all items at the `path` given. `parameters` can be used
@@ -73,7 +73,7 @@ impl Items {
 		match self.stat(path, None) {
 			Ok(MultiOption::One(item)) => match item.kind {
 				Kind::Folder => {
-					self.query_items(item.path().entity_and_parameters(Some("/Children"), parameters))
+					self.get_items(item.path().entity_and_parameters(Some("/Children"), parameters))
 				},
 				Kind::File => {
 					Ok(MultiOption::One(item))
@@ -107,8 +107,7 @@ impl Items {
 
 			let url = path.entity_and_parameters(Some("/Folder"), Some(parameters));
 			
-			self.conn.query_post(url, Some(body))
-				.and_then(|r| Error::from_json(r))
+			self.conn.query_json(Method::Post, url, None, Some(body))
 				.and_then(|v| Path::from_json(v))
 		}
 		else {
@@ -131,7 +130,7 @@ impl Items {
 
 				let url = path.entity_and_parameters(None, Some(parameters));
 
-				self.conn.query_delete(url)
+				self.conn.query_string(Method::Delete, url, None, None)
 					.map(|_| ())
 			})
 	}
@@ -163,8 +162,7 @@ impl Items {
 
 				let url = parent.entity_and_parameters(Some("/BulkDelete"), Some(parameters));
 
-				self.conn.query_post(url, Some(body))
-					.and_then(|r| Error::from_json(r))
+				self.conn.query_json(Method::Post, url, None, Some(body))
 					.map(|_| ())
 			})
 	}
@@ -205,13 +203,8 @@ impl Items {
 	}
 
 	// Do API request which returns Item Collection (GET)
-	fn query_items(&self, uri: String) -> Result<MultiOption<Item>> {
-		match self.conn.query_string(Method::Get, uri, None, None) {
-			Ok(ref json) => match serde_json::from_str(json) {
-				Ok(data) => Item::from_value(data, self.meta),
-				Err(err) => Error::new("JSON parse failed").because(err).result()
-			},
-			Err(err) => err.result()
-		}
+	fn get_items(&self, uri: String) -> Result<MultiOption<Item>> {
+		self.conn.query_json(Method::Get, uri, None, None)
+			.and_then(|data| Item::from_value(data, self.meta))
 	}
 }

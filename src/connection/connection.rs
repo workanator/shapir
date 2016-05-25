@@ -5,7 +5,7 @@ use hyper::client::response::Response;
 use hyper::method::Method;
 use hyper::header::{Headers, ContentType, Authorization, Bearer};
 use hyper::mime::{Mime, TopLevel, SubLevel};
-use serde_json::{self, Value};
+use serde_json::{self, ser, Value};
 use ::{Result, Error};
 use super::{ConnectionSettings, ConnectionBuilder, ConnectionHelper};
 
@@ -249,45 +249,32 @@ impl Connection {
 		}
 	}
 
-	/// Perform the call to the API. JSON string (API response) is returned on success.
+	/// Perform the call to the API. Response body is returned on success.
 	pub fn query_string(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<String> {
-		match self.query(method, uri, headers, body) {
-			Ok(mut response) => {
-				let mut data = String::new();
-				response.read_to_string(&mut data).unwrap();
-
-				Ok(data)
-			},
-			Err(err) => err.result()
-		}
-	}
-
-	// Do API POST request
-	pub fn query_post(&self, uri: String, data: Option<Value>) -> Result<Value> {
-		let body = match data {
-			Some(ref value) => Some(serde_json::to_string(value).unwrap()),
-			None => None
-		};
-
-		match self.query_string(Method::Post, uri, Some(ConnectionHelper::json_headers()), body) {
-			Ok(ref json) => match serde_json::from_str(json) {
-				Ok(data) => Ok(data),
-				Err(err) => Error::new("JSON parse failed").because(err).result()
-			},
-			Err(err) => err.result()
-		}
-	}
-
-	// Do API DELETE request
-	pub fn query_delete(&self, uri: String) -> Result<()> {
-		self.query(Method::Delete, uri, None, None)
-			.and_then(|response| {
+		self.query(method, uri, headers, body)
+			.and_then(|mut response| {
 				if response.status.is_success() {
-					Ok(())
+					let mut data = String::new();
+					response.read_to_string(&mut data)
+						.and(Ok(data))
+						.or(Error::new("Failed to read response body").result())
 				}
 				else {
-					Error::new(format!("API DELETE request failed with status {}", response.status)).result()
+					Error::new(format!("API request failed with status {}", response.status)).result()
 				}
+			})
+	}
+
+	/// Perform the call to the API which returns JSON. JSON Value is returned on success.
+	pub fn query_json(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<Value>) -> Result<Value> {
+		let body = body.map(|ref value| ser::to_string(value).unwrap());
+		let headers = headers.or(Some(ConnectionHelper::json_headers()));
+
+		self.query_string(method, uri, headers, body)
+			.and_then(|json| {
+				serde_json::from_str(&json)
+					.or_else(|err| Error::new("JSON parse failed").because(err).result()) // Return JSON parsing error
+					.and_then(|data| Error::from_json(data)) // Try to parse the error from the response JSON or just pass it through
 			})
 	}
 

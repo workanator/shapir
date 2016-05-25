@@ -136,7 +136,7 @@ impl Path {
 		}
 	}
 
-	// Parse the path from the result JSON
+	/// Construct Path from the result JSON
 	pub fn from_json(value: Value) -> Result<Path> {
 		value.find("Id")
 			.ok_or(Error::new("Cannot find Item ID"))
