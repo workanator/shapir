@@ -151,6 +151,18 @@ mod tests {
 	use serde_json::{self, Value};
 
 	#[test]
+	fn path_get_valid_id() {
+		let path = Path::Id(String::from("123"));
+		assert_eq!(path.id(), String::from("123"));
+	}
+
+	#[test]
+	fn path_get_invalid_id() {
+		let path = Path::Home;
+		assert_eq!(path.id(), String::new());
+	}
+
+	#[test]
 	fn path_home() {
 		let path = Path::Home;
 		assert!(path.is_home());
