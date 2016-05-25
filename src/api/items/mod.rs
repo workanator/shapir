@@ -136,6 +136,39 @@ impl Items {
 			})
 	}
 
+	/// Removes multiple items. All items in bulk delete must be children of the same parent.
+	/// `delete_premanently` set to `true` will remove items from
+	/// the Recycle Bin or bypass it entirely and `force_sync` set to `true` will block
+	/// the operation from taking place asynchronously.
+	pub fn remove_bulk(&self, parent: Path, items: Vec<Path>, delete_premanently: bool, force_sync: bool) -> Result<()> {
+		self.resolve_path(parent)
+			.ok_or(Error::new("The Parent Item is not found"))
+			.and_then(|parent| {
+				// Prepare item list
+				let items: Vec<Value> = items.into_iter()
+					.map(|path| self.resolve_path(path)) // Resolve each Path into an Item ID
+					.filter(|path| path.is_some()) // Remove not resolved Paths
+					.map(|path| path.unwrap()) // Extract Paths from Option
+					.filter(|path| path.is_id()) // Remove those Paths which does not contain the ID
+					.map(|path| Value::String(path.id())) // Extract Item IDs and convert into Value::String
+					.collect();
+
+				let body = Value::Array(items);
+
+				// Perform Bulk Delete
+				let parameters = Parameters::new()
+					.custom(vec![
+						("deletePermanently", super::bool_to_string(delete_premanently)),
+						("forceSync", super::bool_to_string(force_sync)) ]);
+
+				let url = parent.entity_and_parameters(Some("/BulkDelete"), Some(parameters));
+
+				self.conn.query_post(url, Some(body))
+					.and_then(|r| Error::from_json(r))
+					.map(|_| ())
+			})
+	}
+
 	/// Download the item identified by `path`. The method returns reader which can be used
 	/// to read data in any convenient manner.  
 	///
