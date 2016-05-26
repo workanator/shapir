@@ -21,7 +21,7 @@ Add this to Cargo.toml
 
 ```toml
 [dependencies]
-shapir = "0.0.6"
+shapir = "^0.0.7"
 ```
 
 and this to your crate root:
