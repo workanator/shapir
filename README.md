@@ -21,7 +21,7 @@ Add this to Cargo.toml
 
 ```toml
 [dependencies]
-shapir = "0.0.3"
+shapir = "0.0.6"
 ```
 
 and this to your crate root:
@@ -50,4 +50,4 @@ let files = items.list(Path::Home, None).unwrap();
 
 ## Contributing
 
-Contribution is welcome.
+Contributions are always welcome.
