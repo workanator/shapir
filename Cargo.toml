@@ -1,6 +1,6 @@
 [package]
 name = "shapir"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["workanator <workanator@gmail.com>"]
 description = "Unofficial ShareFile REST API SDK"
 keywords = ["ShareFile", "SDK", "REST"]
@@ -11,7 +11,7 @@ documentation = "http://shapir.wellknownteam.ru"
 [dependencies]
 serde_json = "0.7"
 hyper = "0.9"
-url = "1.1"
+url = "1.0"
 chrono = "0.2"
 md5 = "0.1"
 rustc-serialize = "0.3"
