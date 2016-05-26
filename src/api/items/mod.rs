@@ -174,7 +174,7 @@ impl Items {
 	///
 	/// ```ignore
 	/// // Lets assume we have the opened connection already
-	/// let path = Path::Absolute("/my_folder/remote_file.txt");
+	/// let path = Path::Absolute(String::from("/my_folder/remote_file.txt"));
 	///	let mut stream = conn.items().download(path).unwrap();
 	/// let mut file = File::create("local_file.txt").unwrap();
 	/// let mut buf = [0; 1024];
@@ -187,14 +187,53 @@ impl Items {
 	///	}
 	/// ```
 	pub fn download(&self, path: Path) -> Result<Content> {
-		if let Path::Id(id) = path {
+		if path.is_id() {
 			// We have the ID alredy so just start download
-			Content::open_for_read(self.conn.clone(), id)
+			Content::open_for_read(self.conn.clone(), path)
 		}
 		else {
 			// We have a path which should be resolved to the id first
 			match self.stat(path, None) {
-				Ok(MultiOption::One(item)) => Content::open_for_read(self.conn.clone(), item.id),
+				Ok(MultiOption::One(item)) => Content::open_for_read(self.conn.clone(), item.path()),
+				Ok(MultiOption::Many(_)) => Error::new("There are more than one Item on path").result(),
+				Ok(MultiOption::None) => Error::new("The Item is not found").result(),
+				Err(err) => err.result()
+			}
+		}
+	}
+
+	/// Upload the local file/stream into the folder identified by `parent`. The method
+	/// returns the writer which can be used to write data in any convenient manner.
+	///
+	/// The snippet of how the local file can be uploaded.
+	///
+	/// ```ignore
+	/// // Lets assume we have the opened connection already
+	/// let file = File::open("local_file.txt").unwrap();
+	/// let metadata = file.metadata().unwrap();
+	/// let mut file = BufReader::new(file);
+	///
+	/// let parent = Path::Absolute(String::from("/my_folder"));
+	/// let mut stream = items.upload(parent, String::from("file.txt"), metadata.len(), false, true).unwrap();
+	/// let mut buf = [0; 1024];
+	///
+	/// loop {
+	/// 	match file.read(&mut buf) {
+	/// 		Ok(0) => break,
+	/// 		Ok(n) => stream.write_all(&buf[0..n]).unwrap(),
+	/// 		Err(err) => panic!("{:?}", err)
+	/// 	};
+	/// }
+	/// ```
+	pub fn upload(&self, parent: Path, name: String, size: u64, unzip: bool, overwite: bool) -> Result<Content> {
+		if parent.is_id() {
+			// We have the ID alredy so just start download
+			Content::open_for_write(self.conn.clone(), parent, name, size, unzip, overwite)
+		}
+		else {
+			// We have a path which should be resolved to the id first
+			match self.stat(parent, None) {
+				Ok(MultiOption::One(item)) => Content::open_for_write(self.conn.clone(), item.path(), name, size, unzip, overwite),
 				Ok(MultiOption::Many(_)) => Error::new("There are more than one Item on path").result(),
 				Ok(MultiOption::None) => Error::new("The Item is not found").result(),
 				Err(err) => err.result()

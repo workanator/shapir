@@ -179,17 +179,11 @@ impl Connection {
 	}
 
 	/// Perform the low-level custom HTTP request. Hyper's `Response` is returned on success.
-	pub fn custom_request(&self, method: Method, url: String, headers: Option<Headers>, body: Option<String>) -> Result<Response> {
+	pub fn custom_request(&self, method: Method, url: String, headers: Option<Headers>, body: Option<&[u8]>) -> Result<Response> {
 		// Parse URL string into the internal representation
 		let url = match super::url::to_url(url) {
 			Ok(v) => v,
 			Err(err) => return Error::new("Invalid request URL").because(err).result()
-		};
-
-		// Unwrap body so it lives long enough
-		let body = match body {
-			Some(data) => data,
-			None => "".to_string()
 		};
 
 		// Build request
@@ -199,8 +193,10 @@ impl Connection {
 			request = request.headers(headers);
 		}
 
-		if body.len() > 0 {
-			request = request.body(Body::BufBody(body.as_bytes(), body.len()));
+		if let Some(body) = body {
+			if body.len() > 0 {
+				request = request.body(Body::BufBody(body, body.len()));
+			}
 		}
 
 		// .. send and unwrap to string
