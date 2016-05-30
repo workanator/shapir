@@ -249,7 +249,7 @@ impl Connection {
 	pub fn query_string(&self, method: Method, uri: String, headers: Option<Headers>, body: Option<String>) -> Result<String> {
 		self.query(method, uri, headers, body)
 			.and_then(|mut response| {
-				if response.status.is_success() {
+				if !response.status.is_server_error() {
 					let mut data = String::new();
 					response.read_to_string(&mut data)
 						.and(Ok(data))
