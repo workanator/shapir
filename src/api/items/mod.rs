@@ -64,7 +64,15 @@ impl Items {
 	/// Search for Item(s) at the `path` given and return found. `parameters` can be used
 	/// to provide additional options to the API request, like `includeDeleted`.
 	pub fn stat(&self, path: Path, parameters: Option<Parameters>) -> Result<MultiOption<Item>> {
+		use std::error::Error;
+
 		self.get_items(path.entity_and_parameters(None, parameters))
+			.or_else(|err| if err.description().starts_with("NotFound") {
+					Ok(MultiOption::None)
+				}
+				else {
+					Err(err)
+				})
 	}
 
 	/// List all items at the `path` given. `parameters` can be used

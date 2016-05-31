@@ -12,6 +12,7 @@ Possible log types:
 ### Latest
 
 - [fixed] HTTP respose status code. Codes other than 5XX can return JSON content with error messages.
+- [fixed] `Items::stat` tests the result error for `NotFound` to return `None` before returning `Err`.
 
 ### v0.0.7
 
