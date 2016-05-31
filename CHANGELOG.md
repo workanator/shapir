@@ -13,6 +13,7 @@ Possible log types:
 
 - [fixed] HTTP respose status code. Codes other than 5XX can return JSON content with error messages.
 - [fixed] `Items::stat` tests the result error for `NotFound` to return `None` before returning `Err`.
+- [add] Added the convenient method to take the absolute path from `Path::Absolute`.
 
 ### v0.0.7
 

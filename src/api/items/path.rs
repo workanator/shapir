@@ -37,6 +37,14 @@ impl Path {
 		}
 	}
 
+	/// Get Absolute Path if the Path is Absolute or empty string otherwise.
+	pub fn absolute_path(&self) -> String {
+		match self {
+			&Path::Absolute(ref path) => path.clone(),
+			_ => String::new()
+		}
+	}
+
 	/// Test if path points to the home folder
 	pub fn is_home(&self) -> bool {
 		match self {
@@ -160,6 +168,18 @@ mod tests {
 	fn path_get_invalid_id() {
 		let path = Path::Home;
 		assert_eq!(path.id(), String::new());
+	}
+
+	#[test]
+	fn path_get_valid_absolute_path() {
+		let path = Path::Absolute(String::from("/a/b/c"));
+		assert_eq!(path.absolute_path(), String::from("/a/b/c"));
+	}
+
+	#[test]
+	fn path_get_invalid_absolute_path() {
+		let path = Path::Home;
+		assert_eq!(path.absolute_path(), String::new());
 	}
 
 	#[test]
