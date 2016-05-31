@@ -9,7 +9,7 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
-### Latest
+### v0.0.8
 
 - [fixed] HTTP respose status code. Codes other than 5XX can return JSON content with error messages.
 - [fixed] `Items::stat` tests the result error for `NotFound` to return `None` before returning `Err`.
