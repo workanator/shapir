@@ -1,6 +1,6 @@
 all:
-	CFLAGS="-I/opt/local/include" cargo build;
+	CFLAGS="-I/usr/local/opt/openssl/include" cargo build;
 
 package:
-	CFLAGS="-I/opt/local/include" cargo package;
+	CFLAGS="-I/usr/local/opt/openssl/include" cargo package;
 
