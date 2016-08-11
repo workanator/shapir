@@ -9,9 +9,9 @@ repository = "https://github.com/workanator/shapir"
 documentation = "http://shapir.wellknownteam.ru"
 
 [dependencies]
-serde_json = "0.7"
+serde_json = "0.8"
 hyper = "0.9"
-url = "1.0"
+url = "1.2"
 chrono = "0.2"
-md5 = "0.1"
+md5 = "0.2"
 rustc-serialize = "0.3"

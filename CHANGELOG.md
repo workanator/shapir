@@ -11,7 +11,8 @@ Possible log types:
 
 ### v0.1.0
 
-- [changed] Refactor of `Error` type.
+- [changed] Refactor of `Error` type and error handling. The fixes could break compilation
+            of the existing working code.
 
 ### v0.0.8
 
