@@ -27,7 +27,7 @@ impl ServiceError {
         value.find("code")
             .and_then(|code| {
                 // Error code
-                let code = code.as_string()
+                let code = code.as_str()
                     .unwrap();
 
                 // Error message
@@ -35,7 +35,7 @@ impl ServiceError {
                     .unwrap()
                     .find("value")
                     .unwrap()
-                    .as_string()
+                    .as_str()
                     .unwrap();
 
                 Some(ServiceError {

@@ -69,7 +69,7 @@ impl Content {
 			.and_then(|specs| {
 				// Get download URL from the specs and open the stream
 				let download_url = match specs.find("DownloadUrl") {
-					Some(v) => v.as_string().unwrap(),
+					Some(v) => v.as_str().unwrap(),
 					None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "DownloadSpecification.DownloadUrl property is missing."))
 				};
 
@@ -106,7 +106,7 @@ impl Content {
 			.and_then(|specs| {
 				// Get download URL from the specs and open the stream
 				let chunk_uri = match specs.find("ChunkUri") {
-					Some(v) => v.as_string().unwrap(),
+					Some(v) => v.as_str().unwrap(),
 					None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "UploadSpecification.ChunkUri property is missing."))
 				};
 

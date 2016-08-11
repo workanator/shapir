@@ -64,7 +64,7 @@ impl Item {
 	fn item_from_value(value: &Value, with_meta: bool) -> Result<Item> {
 		// Which kind the item of
 		let kind = match value.find("odata.type") {
-			Some(otype) => match otype.as_string().unwrap() {
+			Some(otype) => match otype.as_str().unwrap() {
 				"ShareFile.Api.Models.Folder" => Kind::Folder,
 				"ShareFile.Api.Models.File" => Kind::File,
 				k => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Unknown item kind {}.", k)))
@@ -76,31 +76,31 @@ impl Item {
 
 		// Get item ID
 		let id = match value.find("Id") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.Id property is missing."))
 		};
 
 		// Get item URL
 		let url = match value.find("url") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.url property is missing."))
 		};
 
 		// Get item name
 		let name = match value.find("Name") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.Name property is missing."))
 		};
 
 		// Get item file name
 		let filename = match value.find("FileName") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.FileName property is missing."))
 		};
 
 		// Get item description
 		let description = match value.find("Description") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.Description property is missing."))
 		};
 
@@ -112,7 +112,7 @@ impl Item {
 
 		// Get item creation date and time
 		let creation_date = match value.find("CreationDate") {
-			Some(v) => match v.as_string().unwrap().parse::<DateTime<UTC>>() {
+			Some(v) => match v.as_str().unwrap().parse::<DateTime<UTC>>() {
 				Ok(dt) => dt,
 				Err(err) => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Item.CreationDate property is invalid because {}", err)))
 			},

@@ -22,27 +22,27 @@ impl AuthData {
 	fn parse_value(value: Value) -> Result<AuthData> {
 		// Test if the value contains error
 		if let Some(ref error) = value.lookup("error") {
-			return Error::service_result(ServiceError::new(None, error.as_string().unwrap()));
+			return Error::service_result(ServiceError::new(None, error.as_str().unwrap()));
 		};
 
 		// Get auth values
 		let subdomain = match value.find("subdomain") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Subdomain is missing."))
 		};
 
 		let token_type = match value.find("token_type") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Token Type is missing."))
 		};
 
 		let access_token = match value.find("access_token") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Access Token is missing."))
 		};
 
 		let refresh_token = match value.find("refresh_token") {
-			Some(v) => v.as_string().unwrap(),
+			Some(v) => v.as_str().unwrap(),
 			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Refresh Token is missing."))
 		};
 

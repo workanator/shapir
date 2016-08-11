@@ -148,7 +148,7 @@ impl Path {
 	pub fn from_json(value: Value) -> Result<Path> {
 		value.find("Id")
 			.ok_or(Error::from("Cannot find Item ID"))
-			.map(|id| Path::Id(id.as_string().unwrap().to_owned()))
+			.map(|id| Path::Id(id.as_str().unwrap().to_owned()))
 	}
 }
 
