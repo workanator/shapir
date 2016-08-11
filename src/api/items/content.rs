@@ -3,7 +3,7 @@ use hyper::method::Method;
 use md5;
 use rustc_serialize::hex::ToHex;
 use url::form_urlencoded;
-use ::{Result, Error};
+use ::error::{Result, Error, IoError, IoErrorKind};
 use ::connection::Connection;
 use ::odata::Parameters;
 use super::Path;
@@ -70,12 +70,12 @@ impl Content {
 				// Get download URL from the specs and open the stream
 				let download_url = match specs.find("DownloadUrl") {
 					Some(v) => v.as_string().unwrap(),
-					None => return Error::new("DownloadSpecification.DownloadUrl property is missing.").result()
+					None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "DownloadSpecification.DownloadUrl property is missing."))
 				};
 
 				let reader = match conn.custom_request(Method::Get, download_url.to_owned(), None, None) {
 					Ok(response) => Box::new(response),
-					Err(err) => return Error::new("Cannot start download").because(err).result()
+					Err(err) => return Error::io_result(IoError::new(IoErrorKind::NotConnected, err))
 				};
 
 				Ok(Content {
@@ -107,7 +107,7 @@ impl Content {
 				// Get download URL from the specs and open the stream
 				let chunk_uri = match specs.find("ChunkUri") {
 					Some(v) => v.as_string().unwrap(),
-					None => return Error::new("UploadSpecification.ChunkUri property is missing.").result()
+					None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "UploadSpecification.ChunkUri property is missing."))
 				};
 
 				Ok(Content {

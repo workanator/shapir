@@ -9,11 +9,15 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.1.0
+
+- [changed] Refactor of `Error` type.
+
 ### v0.0.8
 
 - [fixed] HTTP respose status code. Codes other than 5XX can return JSON content with error messages.
 - [fixed] `Items::stat` tests the result error for `NotFound` to return `None` before returning `Err`.
-- [add] Added the convenient method to take the absolute path from `Path::Absolute`.
+- [added] Added the convenient method to take the absolute path from `Path::Absolute`.
 
 ### v0.0.7
 

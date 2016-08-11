@@ -2,7 +2,7 @@ use chrono::{DateTime, UTC};
 use serde_json::Value;
 use ::api::MultiOption;
 use super::{Path, Kind};
-use ::{Result, Error};
+use ::error::{Result, Error, IoError, IoErrorKind};
 
 
 /// Item details
@@ -46,7 +46,7 @@ impl Item {
 				for val in value.find("value").unwrap().as_array().unwrap() {
 					match Item::item_from_value(val, with_meta) {
 						Ok(item) => items.push(item),
-						Err(err) => return err.result()
+						Err(e) => return Err(e)
 					};
 				}
 
@@ -55,7 +55,7 @@ impl Item {
 			None => {
 				match Item::item_from_value(&value, with_meta) {
 					Ok(item) => Ok(MultiOption::One(item)),
-					Err(err) => return err.result()
+					Err(e) => return Err(e)
 				}
 			}
 		}
@@ -67,56 +67,56 @@ impl Item {
 			Some(otype) => match otype.as_string().unwrap() {
 				"ShareFile.Api.Models.Folder" => Kind::Folder,
 				"ShareFile.Api.Models.File" => Kind::File,
-				k => return Error::new(format!("Unknown item kind {}.", k)).result()
+				k => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Unknown item kind {}.", k)))
 			},
 			None => {
-				return Error::new("Item.odata.type property is missing.").result();
+				return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.odata.type property is missing."));
 			}
 		};
 
 		// Get item ID
 		let id = match value.find("Id") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Item.Id property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.Id property is missing."))
 		};
 
 		// Get item URL
 		let url = match value.find("url") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Item.url property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.url property is missing."))
 		};
 
 		// Get item name
 		let name = match value.find("Name") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Item.Name property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.Name property is missing."))
 		};
 
 		// Get item file name
 		let filename = match value.find("FileName") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Item.FileName property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.FileName property is missing."))
 		};
 
 		// Get item description
 		let description = match value.find("Description") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Item.Description property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.Description property is missing."))
 		};
 
 		// Get item size
 		let size = match value.find("FileSizeBytes") {
 			Some(v) => v.as_u64().unwrap(),
-			None => return Error::new("Item.FileSizeBytes property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.FileSizeBytes property is missing."))
 		};
 
 		// Get item creation date and time
 		let creation_date = match value.find("CreationDate") {
 			Some(v) => match v.as_string().unwrap().parse::<DateTime<UTC>>() {
 				Ok(dt) => dt,
-				Err(err) => return Error::new("Item.CreationDate property is invalid").because(err).result()
+				Err(err) => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Item.CreationDate property is invalid because {}", err)))
 			},
-			None => return Error::new("Item.CreationDate property is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Item.CreationDate property is missing."))
 		};
 
 		// Add meta to the item if requested

@@ -147,7 +147,7 @@ impl Path {
 	/// Construct Path from the result JSON
 	pub fn from_json(value: Value) -> Result<Path> {
 		value.find("Id")
-			.ok_or(Error::new("Cannot find Item ID"))
+			.ok_or(Error::from("Cannot find Item ID"))
 			.map(|id| Path::Id(id.as_string().unwrap().to_owned()))
 	}
 }

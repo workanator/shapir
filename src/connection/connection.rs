@@ -6,7 +6,7 @@ use hyper::method::Method;
 use hyper::header::{Headers, ContentType, Authorization, Bearer};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 use serde_json::{self, ser, Value};
-use ::{Result, Error};
+use ::error::{Result, Error, IoError, IoErrorKind, NetworkError, ServiceError};
 use super::{ConnectionSettings, ConnectionBuilder, ConnectionHelper};
 
 
@@ -22,28 +22,28 @@ impl AuthData {
 	fn parse_value(value: Value) -> Result<AuthData> {
 		// Test if the value contains error
 		if let Some(ref error) = value.lookup("error") {
-			return Error::new(format!("{:?}", error)).result();
+			return Error::service_result(ServiceError::new(None, error.as_string().unwrap()));
 		};
 
 		// Get auth values
 		let subdomain = match value.find("subdomain") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Auth Subdomain is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Subdomain is missing."))
 		};
 
 		let token_type = match value.find("token_type") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Auth Token Type is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Token Type is missing."))
 		};
 
 		let access_token = match value.find("access_token") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Auth Access Token is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Access Token is missing."))
 		};
 
 		let refresh_token = match value.find("refresh_token") {
 			Some(v) => v.as_string().unwrap(),
-			None => return Error::new("Auth Refresh Token is missing.").result()
+			None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Auth Refresh Token is missing."))
 		};
 
 		// Fill in auth struct
@@ -115,27 +115,27 @@ impl Connection {
 		// Prepare authentication request body and URL
 		let subdomain = match &self.settings.subdomain {
 			&Some(ref v) => v.clone(),
-			&None => return Error::new("Subdomain is required").result()
+			&None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Subdomain is required"))
 		};
 
 		let username = match &self.settings.username {
 			&Some(ref v) => v.clone(),
-			&None => return Error::new("Username is required").result()
+			&None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Username is required"))
 		};
 
 		let password = match &self.settings.password {
 			&Some(ref v) => v.clone(),
-			&None => return Error::new("Password is required").result()
+			&None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Password is required"))
 		};
 
 		let client_id = match &self.settings.client_id {
 			&Some(ref v) => v.clone(),
-			&None => return Error::new("Client ID is required").result()
+			&None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Client ID is required"))
 		};
 
 		let client_secret = match &self.settings.client_secret {
 			&Some(ref v) => v.clone(),
-			&None => return Error::new("Client Secret is required").result()
+			&None => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Client Secret is required"))
 		};
 
 		let form_data: String = form_urlencoded::Serializer::new(String::new())
@@ -149,7 +149,7 @@ impl Connection {
 
 		let url = match super::url::to_url(format!("https://{}.sharefile.com/oauth/token", subdomain)) {
 			Ok(v) => v,
-			Err(err) => return Error::new("Invalid OAuth URL").because(err).result()
+			Err(err) => return Error::url_result(err)
 		};
 
 		// Try to authenticate on ShareFile
@@ -160,7 +160,7 @@ impl Connection {
 
 		let mut response = match response {
 			Ok(response) => response,
-			Err(err) => return Error::new("Authentication failed").because(err).result()
+			Err(err) => return Error::network_result(err)
 		};
 
 		// Parse response into JSON Value and then into AuthData
@@ -183,7 +183,7 @@ impl Connection {
 		// Parse URL string into the internal representation
 		let url = match super::url::to_url(url) {
 			Ok(v) => v,
-			Err(err) => return Error::new("Invalid request URL").because(err).result()
+			Err(err) => return Error::url_result(err)
 		};
 
 		// Build request
@@ -202,7 +202,7 @@ impl Connection {
 		// .. send and unwrap to string
 		match request.send() {
 			Ok(response) => Ok(response),
-			Err(err) => Error::new("Custom request failed").because(err).result()
+			Err(err) => Error::network_result(err)
 		}
 	}
 
@@ -212,7 +212,7 @@ impl Connection {
 			// Parse URL string into the internal representation
 			let url = match super::url::to_url(format!("{}{}", self.endpoint, uri)) {
 				Ok(v) => v,
-				Err(err) => return Error::new("Invalid request URL").because(err).result()
+				Err(err) => return Error::url_result(err)
 			};
 
 			// Unwrap body so it lives long enough
@@ -237,11 +237,11 @@ impl Connection {
 			// .. send and unwrap to string
 			match request.send() {
 				Ok(response) => Ok(response),
-				Err(err) => Error::new("Query failed").because(err).result()
+				Err(err) => Error::network_result(err)
 			}
 		}
 		else {
-			Error::new("Not authenticated").result()
+			Error::io_result(IoError::new(IoErrorKind::PermissionDenied, "Not authenticated"))
 		}
 	}
 
@@ -253,10 +253,10 @@ impl Connection {
 					let mut data = String::new();
 					response.read_to_string(&mut data)
 						.and(Ok(data))
-						.or(Error::new("Failed to read response body").result())
+						.or(Error::other_result("Failed to read response body"))
 				}
 				else {
-					Error::new(format!("API request failed with status {}", response.status)).result()
+					Error::network_result(NetworkError::from(IoError::new(IoErrorKind::Other, format!("API request failed with status {}", response.status))))
 				}
 			})
 	}
@@ -269,7 +269,7 @@ impl Connection {
 		self.query_string(method, uri, headers, body)
 			.and_then(|json| {
 				serde_json::from_str(&json)
-					.or_else(|err| Error::new("JSON parse failed").because(err).result()) // Return JSON parsing error
+					.or_else(|err| Error::json_result(err)) // Return JSON parsing error
 					.and_then(|data| Error::from_json(data)) // Try to parse the error from the response JSON or just pass it through
 			})
 	}

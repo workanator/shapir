@@ -88,7 +88,7 @@ impl Items {
 				}
 			},
 			Ok(other) => Ok(other),
-			Err(err) => err.result()
+			Err(e) => Err(e)
 		}
 	}
 
@@ -119,7 +119,7 @@ impl Items {
 				.and_then(|v| Path::from_json(v))
 		}
 		else {
-			Error::new("Cannot resolve parent ID").result()
+			Err(Error::from("Cannot resolve parent ID"))
 		}
 	}
 
@@ -129,7 +129,7 @@ impl Items {
 	/// asynchronously.
 	pub fn remove(&self, path: Path, single_version: bool, force_sync: bool) -> Result<()> {
 		self.resolve_path(path)
-			.ok_or(Error::new("The Item is not found"))
+			.ok_or(Error::from("The Item is not found"))
 			.and_then(|path| {
 				let parameters = Parameters::new()
 					.custom(vec![
@@ -149,7 +149,7 @@ impl Items {
 	/// the operation from taking place asynchronously.
 	pub fn remove_bulk(&self, parent: Path, items: Vec<Path>, delete_premanently: bool, force_sync: bool) -> Result<()> {
 		self.resolve_path(parent)
-			.ok_or(Error::new("The Parent Item is not found"))
+			.ok_or(Error::from("The Parent Item is not found"))
 			.and_then(|parent| {
 				// Prepare item list
 				let items: Vec<Value> = items.into_iter()
@@ -203,9 +203,9 @@ impl Items {
 			// We have a path which should be resolved to the id first
 			match self.stat(path, None) {
 				Ok(MultiOption::One(item)) => Content::open_for_read(self.conn.clone(), item.path()),
-				Ok(MultiOption::Many(_)) => Error::new("There are more than one Item on path").result(),
-				Ok(MultiOption::None) => Error::new("The Item is not found").result(),
-				Err(err) => err.result()
+				Ok(MultiOption::Many(_)) => Err(Error::from("There are more than one Item on path")),
+				Ok(MultiOption::None) => Err(Error::from("The Item is not found")),
+				Err(e) => Err(e)
 			}
 		}
 	}
@@ -242,9 +242,9 @@ impl Items {
 			// We have a path which should be resolved to the id first
 			match self.stat(parent, None) {
 				Ok(MultiOption::One(item)) => Content::open_for_write(self.conn.clone(), item.path(), name, size, unzip, overwite),
-				Ok(MultiOption::Many(_)) => Error::new("There are more than one Item on path").result(),
-				Ok(MultiOption::None) => Error::new("The Item is not found").result(),
-				Err(err) => err.result()
+				Ok(MultiOption::Many(_)) => Err(Error::from("There are more than one Item on path")),
+				Ok(MultiOption::None) => Err(Error::from("The Item is not found")),
+				Err(e) => Err(e)
 			}
 		}
 	}
