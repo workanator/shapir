@@ -9,6 +9,10 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.1.1
+
+- [changed] Changed the target URL of the crate documentation to [DOCS.RS](https://docs.rs/shapir).
+
 ### v0.1.0
 
 - [changed] Refactor of `Error` type and error handling. The fixes could break compilation
