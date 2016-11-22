@@ -27,6 +27,7 @@ pub use self::content::Content;
 pub struct Items {
 	conn: Connection,
 	meta: bool,
+	upload_chunk_size: Option<usize>,
 }
 
 
@@ -36,6 +37,16 @@ impl Items {
 		Items {
 			conn: conn,
 			meta: false,
+			upload_chunk_size: None,
+		}
+	}
+
+	/// Create a configured instance of Item Entities API
+	pub fn configured(conn: Connection, meta: bool, upload_chunk_size: Option<usize>) -> Self {
+		Items {
+			conn: conn,
+			meta: meta,
+			upload_chunk_size: upload_chunk_size,
 		}
 	}
 
@@ -43,6 +54,17 @@ impl Items {
 	/// or omit it.
 	pub fn include_meta(&mut self, include: bool) {
 		self.meta = include;
+	}
+
+	/// Get the upload chunk size. The uploading is going chunk by chunk and each chunk
+	/// uploading requires HTTP request to be made.
+	pub fn upload_chunk_size(&self) -> Option<usize> {
+		self.upload_chunk_size
+	}
+
+	/// Set the upload chunk size.
+	pub fn set_upload_chunk_size(&mut self, chunk_size: Option<usize>) {
+		self.upload_chunk_size = chunk_size;
 	}
 
 	/// Resolve given `path` to the Item ID. On success returns `Some(Path::Id(id))`
@@ -236,12 +258,12 @@ impl Items {
 	pub fn upload(&self, parent: Path, name: String, size: u64, unzip: bool, overwite: bool) -> Result<Content> {
 		if parent.is_id() {
 			// We have the ID alredy so just start download
-			Content::open_for_write(self.conn.clone(), parent, name, size, unzip, overwite)
+			Content::open_for_write(self.conn.clone(), parent, name, size, unzip, overwite, self.upload_chunk_size)
 		}
 		else {
 			// We have a path which should be resolved to the id first
 			match self.stat(parent, None) {
-				Ok(MultiOption::One(item)) => Content::open_for_write(self.conn.clone(), item.path(), name, size, unzip, overwite),
+				Ok(MultiOption::One(item)) => Content::open_for_write(self.conn.clone(), item.path(), name, size, unzip, overwite, self.upload_chunk_size),
 				Ok(MultiOption::Many(_)) => Err(Error::from("There are more than one Item on path")),
 				Ok(MultiOption::None) => Err(Error::from("The Item is not found")),
 				Err(e) => Err(e)

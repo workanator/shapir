@@ -9,6 +9,12 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.1.2
+
+- [added] Move uploading chunk size from constant to managed option. See `Items::upload_chunk_size`.
+- [added] New static function for initialization `Items::configured`.
+- [added] Ability to create configured `Items` instance with `Connection::items_configured`.
+
 ### v0.1.1
 
 - [changed] Changed the target URL of the crate documentation to [DOCS.RS](https://docs.rs/shapir).

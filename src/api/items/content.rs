@@ -10,7 +10,7 @@ use super::Path;
 
 
 // Define the uploading data chunk size
-const CHUNK_SIZE: usize = 1024 * 16;
+const CHUNK_SIZE: usize = 1024 * 1024;
 
 
 struct WriteBuf {
@@ -20,11 +20,12 @@ struct WriteBuf {
 	buffer: Vec<u8>,
 	chunk_uri: String,
 	chunk_no: u32,
+	chunk_size: usize,
 }
 
 
 impl WriteBuf {
-	fn new(conn: Connection, size: u64, chunk_uri: String) -> Self {
+	fn new(conn: Connection, size: u64, chunk_uri: String, chunk_size: usize) -> Self {
 		WriteBuf {
 			conn: conn,
 			size: size,
@@ -32,6 +33,7 @@ impl WriteBuf {
 			written: 0,
 			chunk_uri: chunk_uri,
 			chunk_no: 0,
+			chunk_size: chunk_size,
 		}
 	}
 }
@@ -88,7 +90,7 @@ impl Content {
 	/// Create the new instance of `Content` for writing data. Most time there is no need
 	/// to create this struct directly. The better practice is to use method `upload()`
 	/// of the `Items` instance.
-	pub fn open_for_write(conn: Connection, parent: Path, name: String, size: u64, unzip: bool, overwrite: bool) -> Result<Self> {
+	pub fn open_for_write(conn: Connection, parent: Path, name: String, size: u64, unzip: bool, overwrite: bool, chunk_size: Option<usize>) -> Result<Self> {
 		let params = Parameters::new()
 			.custom(vec![
 				("method", "streamed"),
@@ -112,7 +114,7 @@ impl Content {
 
 				Ok(Content {
 					reader: None,
-					writer: Some(WriteBuf::new(conn, size, chunk_uri.to_owned())),
+					writer: Some(WriteBuf::new(conn, size, chunk_uri.to_owned(), chunk_size.unwrap_or(CHUNK_SIZE))),
 				})
 			})
 	}
@@ -145,7 +147,7 @@ impl io::Write for Content {
 				let finish = (write_buf.written + write_buf.buffer.len() as u64) >= write_buf.size;
 
 				// Force upload if the chunk size is reached or the file size if reached
-				if write_buf.buffer.len() >= CHUNK_SIZE || finish {
+				if write_buf.buffer.len() >= write_buf.chunk_size || finish {
 					// Compute MD5 digest of the data chunk
 					let digest = md5::compute(write_buf.buffer.as_slice());
 

@@ -279,4 +279,9 @@ impl Connection {
 		::api::items::Items::new(self.clone())
 	}
 
+	/// Get configured [Items](http://api.sharefile.com/rest/docs/resource.aspx?name=Items) API Entity.
+	pub fn items_configured(&self, meta: bool, upload_chunk_size: Option<usize>) -> ::api::items::Items {
+		::api::items::Items::configured(self.clone(), meta, upload_chunk_size)
+	}
+
 }
