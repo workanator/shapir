@@ -9,6 +9,10 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.1.3
+
+- [added] Added user identifier `api::users::UserId`.
+
 ### v0.1.2
 
 - [added] Move uploading chunk size from constant to managed option. See `Items::upload_chunk_size`.

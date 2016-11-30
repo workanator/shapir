@@ -3,6 +3,7 @@
 
 mod multi_option;
 pub mod items;
+pub mod users;
 
 pub use self::multi_option::MultiOption;
 
