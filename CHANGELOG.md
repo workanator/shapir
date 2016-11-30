@@ -9,6 +9,9 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.2.0
+- [added] Added `api::shares::Kind`.
+
 ### v0.1.3
 
 - [added] Added user identifier `api::users::UserId`.

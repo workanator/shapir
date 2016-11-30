@@ -4,8 +4,11 @@
 mod multi_option;
 pub mod items;
 pub mod users;
+pub mod shares;
+
 
 pub use self::multi_option::MultiOption;
+
 
 fn bool_to_string(v: bool) -> String {
 	if v {

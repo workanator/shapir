@@ -1,6 +1,6 @@
 [package]
 name = "shapir"
-version = "0.1.3"
+version = "0.2.0"
 authors = ["workanator <workanator@gmail.com>"]
 description = "Unofficial ShareFile REST API SDK"
 keywords = ["ShareFile", "SDK", "REST"]
