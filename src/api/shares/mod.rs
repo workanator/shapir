@@ -2,6 +2,7 @@
 
 
 mod kind;
+mod access_right;
 mod config;
 mod share;
 
@@ -14,6 +15,7 @@ use ::Result;
 
 
 pub use self::kind::Kind;
+pub use self::access_right::AccessRight;
 pub use self::config::ShareConfig;
 pub use self::share::Share;
 

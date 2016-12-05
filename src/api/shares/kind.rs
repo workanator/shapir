@@ -1,4 +1,5 @@
 use serde_json::{self, Value};
+use ::error::{Result, Error, IoError, IoErrorKind};
 
 
 /// Share Kind
@@ -12,6 +13,16 @@ pub enum Kind {
 
 
 impl Kind {
+    /// Construct share from the decoded JSON value.
+    pub fn from_json(value: Value) -> Result<Kind> {
+        match value.as_str() {
+            Some("Send") => Ok(Kind::Send),
+            Some("Request") => Ok(Kind::Request),
+            Some(other) => Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Share.Kind encounters unknown type {}.", other))),
+            None => Error::io_result(IoError::new(IoErrorKind::InvalidInput, "Share.Kind expects JSON string where other type is found.")),
+        }
+    }
+
     /// Test if type is `Send`
     pub fn is_send(&self) -> bool {
         match self {

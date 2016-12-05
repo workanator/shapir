@@ -10,7 +10,8 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 ### v0.2.0
-- [added] Added `api::shares::Kind`.
+- [added] Added `api::shares::{Kind, AccessRight, Share, ShareConfig}`.
+- [added] Added minimalistics Share Entity API implementation including share creation only at the moment.
 
 ### v0.1.3
 
