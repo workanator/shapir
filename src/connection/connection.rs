@@ -284,4 +284,9 @@ impl Connection {
 		::api::items::Items::configured(self.clone(), meta, upload_chunk_size)
 	}
 
+	/// Get [Shares](http://api.sharefile.com/rest/docs/resource.aspx?name=Shares) API Entity.
+	pub fn shares(&self) -> ::api::shares::Shares {
+		::api::shares::Shares::new(self.clone())
+	}
+
 }
