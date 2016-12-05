@@ -9,6 +9,10 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.2.1
+- [changed] Changed contained value type of `UserId::Email` from `String` to `email::Mailbox`.
+- [changed] Changed interface of creating `UserId` instance.
+
 ### v0.2.0
 - [added] Added `api::shares::{Kind, AccessRight, Share, ShareConfig}`.
 - [added] Added minimalistics Share Entity API implementation including share creation only at the moment.

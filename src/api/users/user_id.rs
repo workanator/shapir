@@ -1,25 +1,34 @@
+use std::cmp::{PartialOrd, Ord, Ordering};
 use serde_json::{self, Value};
+use email::Mailbox;
 
 
 /// User ID
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserId {
     /// The user is identified by ID
     Id(String),
     /// The user is identified by e-mail address
-    Email(String),
+    Email(Mailbox),
 }
 
 
 impl UserId {
-    /// Create user ID from `id` given
-    pub fn from_id(id: String) -> UserId {
-        UserId::Id(id)
+    /// Create user ID from `id` given.
+    pub fn from_id<T>(id: T) -> UserId
+    where T: Into<String> {
+        UserId::Id(id.into())
     }
 
-    /// Create user ID from `email` given
-    pub fn from_email(email: String) -> UserId {
-        UserId::Email(email)
+    /// Create user ID from `email` given.
+    pub fn from_email<T>(email: T) -> UserId
+    where T: Into<String> {
+        UserId::Email(Mailbox::new(email.into()))
+    }
+
+    /// Create user ID from `mailbox` given.
+    pub fn from_mailbox(mailbox: Mailbox) -> UserId {
+        UserId::Email(mailbox)
     }
 
     /// Get ID if the user is identified by ID or empty string otherwise.
@@ -33,7 +42,7 @@ impl UserId {
     /// Get e-mail address if the user is identified by e-mail address or empty string otherwise.
     pub fn email(&self) -> String {
         match self {
-            &UserId::Email(ref email) => email.clone(),
+            &UserId::Email(ref mailbox) => mailbox.address.clone(),
             _ => String::new(),
         }
     }
@@ -66,12 +75,46 @@ impl serde_json::value::ToJson for UserId {
             &UserId::Id(ref id) => {
                 object.insert("Id".to_owned(), Value::String(id.clone()));
             },
-            &UserId::Email(ref email) => {
-                object.insert("Email".to_owned(), Value::String(email.clone()));
+            &UserId::Email(ref mailbox) => {
+                object.insert("Email".to_owned(), Value::String(mailbox.address.clone()));
             }
         };
 
         Value::Object(object)
+    }
+}
+
+
+// Implement PartialOrd for UserId
+impl PartialOrd for UserId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self {
+            &UserId::Id(ref id) => match other {
+                &UserId::Id(ref other_id) => Some(id.cmp(other_id)),
+                _ => None
+            },
+            &UserId::Email(ref mailbox) => match other {
+                &UserId::Email(ref other_mailbox) => Some(mailbox.address.to_lowercase().cmp(&other_mailbox.address.to_lowercase())),
+                _ => None
+            }
+        }
+    }
+}
+
+
+// Implement Ord for UserId
+impl Ord for UserId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self {
+            &UserId::Id(ref id) => match other {
+                &UserId::Id(ref other_id) => id.cmp(other_id),
+                _ => Ordering::Less,
+            },
+            &UserId::Email(ref mailbox) => match other {
+                &UserId::Email(ref other_mailbox) => mailbox.address.to_lowercase().cmp(&other_mailbox.address.to_lowercase()),
+                _ => Ordering::Greater,
+            }
+        }
     }
 }
 

@@ -14,6 +14,7 @@ extern crate url;
 extern crate chrono;
 extern crate md5;
 extern crate rustc_serialize;
+extern crate email;
 
 
 pub mod error;

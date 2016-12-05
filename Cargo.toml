@@ -1,6 +1,6 @@
 [package]
 name = "shapir"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["workanator <workanator@gmail.com>"]
 description = "Unofficial ShareFile REST API SDK"
 keywords = ["ShareFile", "SDK", "REST"]
@@ -15,3 +15,4 @@ url = "1.2"
 chrono = "0.2"
 md5 = "0.2"
 rustc-serialize = "0.3"
+email = "^0.0.13"
