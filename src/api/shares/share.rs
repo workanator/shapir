@@ -1,4 +1,4 @@
-use chrono::{DateTime, UTC};
+use chrono::prelude::*;
 use serde_json::Value;
 use ::error::{Result, Error, IoError, IoErrorKind};
 use super::{Kind, AccessRight};
@@ -16,11 +16,11 @@ pub struct Share {
     /// Alias ID of the share.
     pub alias_id: String,
     /// Date the share was created.
-    pub creation_date: DateTime<UTC>,
+    pub creation_date: DateTime<Utc>,
     /// Date the share expires.
-    pub expiration_date: DateTime<UTC>,
+    pub expiration_date: DateTime<Utc>,
     /// User activity on this share will be tracked up to this date.
-    pub track_until_date: DateTime<UTC>,
+    pub track_until_date: DateTime<Utc>,
     /// Maximum number of downloads each user can perform.
     pub max_downloads: i32,
     /// Total number of times a share has been downloaded by a user.
@@ -88,7 +88,7 @@ impl Share {
 
             // Read creation date
             let creation_date = match object.get("CreationDate") {
-                Some(v) => match v.as_str().unwrap().parse::<DateTime<UTC>>() {
+                Some(v) => match v.as_str().unwrap().parse::<DateTime<Utc>>() {
                     Ok(dt) => dt,
                     Err(err) => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Share.CreationDate property is invalid because {}", err)))
                 },
@@ -97,7 +97,7 @@ impl Share {
 
             // Read expiration date
             let expiration_date = match object.get("ExpirationDate") {
-                Some(v) => match v.as_str().unwrap().parse::<DateTime<UTC>>() {
+                Some(v) => match v.as_str().unwrap().parse::<DateTime<Utc>>() {
                     Ok(dt) => dt,
                     Err(err) => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Share.ExpirationDate property is invalid because {}", err)))
                 },
@@ -106,7 +106,7 @@ impl Share {
 
             // Read track until date
             let track_until_date = match object.get("TrackUntilDate") {
-                Some(v) => match v.as_str().unwrap().parse::<DateTime<UTC>>() {
+                Some(v) => match v.as_str().unwrap().parse::<DateTime<Utc>>() {
                     Ok(dt) => dt,
                     Err(err) => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Share.TrackUntilDate property is invalid because {}", err)))
                 },

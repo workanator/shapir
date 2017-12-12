@@ -1,5 +1,5 @@
 use super::Kind;
-use chrono::{DateTime, UTC};
+use chrono::prelude::*;
 use serde_json::{self, Value};
 use ::{Error, Result};
 use ::api::items::Path;
@@ -22,7 +22,7 @@ pub struct ShareConfig {
     /// List of users that have access to this share.
     recipients: Option<Vec<UserId>>,
     /// Date the share expires.
-    expiration_date: Option<DateTime<UTC>>,
+    expiration_date: Option<DateTime<Utc>>,
     /// If set to `true`, only authenticated users can download files from this share.
     require_login: Option<bool>,
     /// If set to `true`, users must provide Name, Email and Company information to download files from the share.
@@ -99,7 +99,7 @@ impl ShareConfig {
     }
 
     /// Set expiration date.
-    pub fn expiration_date(mut self, expiration_date: DateTime<UTC>) -> Self {
+    pub fn expiration_date(mut self, expiration_date: DateTime<Utc>) -> Self {
         self.expiration_date = Some(expiration_date);
         self
     }

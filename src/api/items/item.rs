@@ -1,4 +1,4 @@
-use chrono::{DateTime, UTC};
+use chrono::prelude::*;
 use serde_json::Value;
 use ::api::MultiOption;
 use super::{Path, Kind};
@@ -23,7 +23,7 @@ pub struct Item {
 	/// Item size
 	pub size: u64,
 	/// Item creation date and time
-	pub creation_date: DateTime<UTC>,
+	pub creation_date: DateTime<Utc>,
 	/// Meta information as it returned from ShareFile REST API
 	pub meta: Option<Value>,
 }
@@ -112,7 +112,7 @@ impl Item {
 
 		// Get item creation date and time
 		let creation_date = match value.find("CreationDate") {
-			Some(v) => match v.as_str().unwrap().parse::<DateTime<UTC>>() {
+			Some(v) => match v.as_str().unwrap().parse::<DateTime<Utc>>() {
 				Ok(dt) => dt,
 				Err(err) => return Error::io_result(IoError::new(IoErrorKind::InvalidInput, format!("Item.CreationDate property is invalid because {}", err)))
 			},

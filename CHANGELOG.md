@@ -9,6 +9,13 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.3.0
+- [changed] Updated dependency `chrono` to v0.4
+- [changed] Updated dependency `url` to v1.6
+- [changed] Updated dependency `md5` to v0.3
+- [changed] Updated dependency `email` to v0.0.18
+- [changed] Updated dependency `hyper` to v0.10
+
 ### v0.2.1
 - [changed] Changed contained value type of `UserId::Email` from `String` to `email::Mailbox`.
 - [changed] Changed interface of creating `UserId` instance.
