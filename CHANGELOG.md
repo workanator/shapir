@@ -9,6 +9,9 @@ Possible log types:
 - `[fixed]` for any bug fixes.
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
+### v0.3.1
+- [changed] Fallback dependency `hyper` to v0.9
+
 ### v0.3.0
 - [changed] Updated dependency `chrono` to v0.4
 - [changed] Updated dependency `url` to v1.6

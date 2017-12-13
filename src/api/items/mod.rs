@@ -218,7 +218,7 @@ impl Items {
     /// ```
     pub fn download(&self, path: Path) -> Result<Content> {
         if path.is_id() {
-            // We have the ID alredy so just start download
+            // We have the ID already so just start download
             Content::open_for_read(self.conn.clone(), path)
         }
         else {
@@ -257,7 +257,7 @@ impl Items {
     /// ```
     pub fn upload(&self, parent: Path, name: String, size: u64, unzip: bool, overwite: bool) -> Result<Content> {
         if parent.is_id() {
-            // We have the ID alredy so just start download
+            // We have the ID already so just start download
             Content::open_for_write(self.conn.clone(), parent, name, size, unzip, overwite, self.upload_chunk_size)
         }
         else {
