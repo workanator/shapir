@@ -99,8 +99,15 @@ impl Connection {
 
 	/// Create the configured `Connection` using given settings.
 	pub fn configured(settings: ConnectionSettings) -> Connection {
+		let mut client = Client::new();
+
+		// Set I/O operations timeouts
+		client.set_read_timeout(settings.read_timeout);
+		client.set_write_timeout(settings.write_timeout);
+
+		// Construct connection instance
 		Connection {
-			client: Arc::new(Client::new()),
+			client: Arc::new(client),
 			settings: settings,
 			auth: None,
 			endpoint: "".to_string(),

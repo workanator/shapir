@@ -1,3 +1,4 @@
+use std::time::Duration;
 use ::Result;
 use super::ConnectionSettings;
 use super::Connection;
@@ -16,6 +17,18 @@ impl ConnectionBuilder {
 		ConnectionBuilder {
 			settings: ConnectionSettings::default(),
 		}
+	}
+
+	/// Set `read_timeout` setting
+	pub fn read_timeout(mut self, timeout: Duration) -> Self {
+		self.settings.read_timeout = Some(timeout);
+		self
+	}
+
+	/// Set `write_timeout` setting
+	pub fn write_timeout(mut self, timeout: Duration) -> Self {
+		self.settings.write_timeout = Some(timeout);
+		self
 	}
 
 	/// Set `subdomain` setting
