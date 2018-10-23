@@ -1,6 +1,6 @@
 language: rust
 rust:
-  - 1.22.1
+  - 1.29.2
 notifications:
   email:
     recipients:
