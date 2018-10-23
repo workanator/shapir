@@ -173,7 +173,20 @@ impl Connection {
 		// Parse response into JSON Value and then into AuthData
 		let mut json = String::new();
 		response.read_to_string(&mut json).unwrap();
-		match AuthData::parse_value(serde_json::from_str(&json).unwrap()) {
+
+		let value = match serde_json::from_str(&json) {
+			Ok(v) => v,
+			Err(err) => {
+				let mut s = err.to_string();
+				if json.contains("<head") {
+					s.push_str("\n");
+					s.push_str(&json);
+				}
+				return Error::other_result(err.to_string())
+			}
+		};
+
+		match AuthData::parse_value(value) {
 			Ok(data) => {
 				self.endpoint = format!("https://{}.sf-api.com/sf/v3/", data.subdomain);
 				self.auth = Some(data);
